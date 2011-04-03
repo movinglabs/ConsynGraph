@@ -11,7 +11,7 @@ A JavaScript Graphing Library based on Raphael.
  
 Supported Graph Types
 ---------------------
-* None implemented so far
+ * None implemented so far
  
 Planned Graph Types
  * Line/Area
