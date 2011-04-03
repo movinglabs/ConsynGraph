@@ -14,6 +14,7 @@ Supported Graph Types
  * None implemented so far
  
 Planned Graph Types
+
  * Line/Area
  * Stacked Area/Line
  * Range (not sure how to name it)
