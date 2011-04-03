@@ -7,7 +7,7 @@ A JavaScript Graphing Library based on Raphael.
  * All types of graphs can be rendered together into a single view. So you can plot a line on top of a barchart, etc.
  * All parts of the rendering are individually replaceable.
  * It's possible to combine multiple graphs into a single grid, with aligned axes (or not)
- 
+
  
 Supported Graph Types
 ---------------------

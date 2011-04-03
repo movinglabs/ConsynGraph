@@ -7,6 +7,8 @@
     <style type="text/css">
     html,body { font-family: sans-serif; }
     h2 { background-color: #EFEFEF; padding: 4px;}
+    code { background-color: #EFEFEF; }
+    pre code { display: block; }
     </style>
     
     <script src="../dependencies/raphael.js" type="text/javascript" charset="utf-8"></script>
@@ -30,33 +32,105 @@
    <pre><code>
    
    var view = new ConsynGraph.View(
-     [
-       new ConsynGraph.Serie(
-        {x: [10, 20 , 30, 50, 70],
+     { // data series
+     serie1:
+       { 
+         x: [10, 20 , 30, 50, 70],
          y: [52, 62, 45, 25, 63]
-         },
-         {
-          label: "Simple Series 1"
-        }
-       ),
-       new ConsynGraph.Serie(
+       },
+     serie2:
        {x: [10, 20 , 21, 54, 33],
          y: [52, 62, 40, 25, 63]
+         }
+    }, 
+    { // options
+         title: "Simple Graph",
+         axes: {
+           west: true, 
+           south: {
+             name: "Time",
+             label: function(v){
+               return v; // label formatting function
+             }
+           }
          },
-         {
-          label: "Simple Series 2"
-        }
-       )
-     ],{
-     
-     }
-   ).draw(document.getElementById('simple1'));
+         grid: {
+           x: false,
+           y: {step: 10, start: 0 }
+         }
+         series: {
+           serie1: {
+             label: "Serie 1 Line", 
+             markers: "o",
+             line: true,
+           },
+           serie2: {
+             label: "Serie 2 Area"
+             line: true,
+             area: {
+               color: '#CCF',
+               opacity: 0.5
+             }
+           }
+         
+         }
+       }
+     ).draw(document.getElementById('simple1'));
    
    </code></pre>
   
    <h2>Data Description</h2>
    
+   
+   
    <h3>Simple Series</h3>
+   <p> The following definitions are identical:</p>
+   <pre><code>
+    var series1 = [30, 52, 52, 20];
+    var series1b = { y: [30, 52, 52, 20] };
+    var series1c = { y: [30, 52, 52, 20], x: [ 1, 2, 3, 4 ] };
+   </code></pre>
+   <p>Datapoints can also be plotted for x-values spaced in a different way.</p>
+   <pre><code>
+    var series1d = { y: [30, 52, 52, 20], x: [ 3, 4, 6, 9 ] };
+   </code></pre>
+   
+   <p>Some graph types may require additional values, that can be used during rendering.</p>
+   <pre><code>
+    var series1e = { y: [30, 52, 52, 20], x: [ 3, 4, 6, 9 ],
+      height: [10, 10, 1, 20] };
+   </code></pre>
+   
+   <p>An example of this is:</p>
+   
+   <pre><code>[[example of using additional data to determine marker size]]</code></pre>
+   <p>Another example is for a boxplot:</p>
+   <pre><code>
+   
+   var data = {series1: {
+       x:      [ 10, 20, 30, 40],
+       y:      [ 15, 13, 20, 7],
+       y_min:  [ 5, 10, 13, 6],
+       y_max:  [ 20, 20, 25, 15],
+       y_25th: [7, 11, 15, 7],
+       y_75th: [17, 15, 22, 12]
+     }
+   }
+   
+   new ConsynGraph.View(data, {
+     title: "Boxplot example",
+     series: { series1:
+       { boxplot: {
+          fields: {min: 'y_min',max:'y_max',mean:'y', '25th':'y_25th','75th':'y_75th'},
+          box: {width: 10}
+       }
+     }
+   })
+   
+   </code></pre>
+   
+   
+   
    
    <h3>Scatter Values</h3>
    
@@ -86,6 +160,29 @@
    
    <h2>Multi-View</h2>
    <p>Combine multiple graphs.</p>
+   <div style="height: 400px; width: 600px;" id="multiview1"></div>
+   
+   <pre><code>
+   var a = new ConsynGraph.View();
+   var b = new ConsynGraph.View();
+   var c = new ConsynGraph.View();
+   var d = new ConsynGraph.View();
+   var e = new ConsynGraph.View();
+   var f = new ConsynGraph.View();
+   
+   var grid = new ConsynGraph.ViewGrid(
+                [ 
+                  [a, b, c ],
+                  [d, e, f ]
+                ], {
+                  align_x: true,
+                  align_y: true,
+                  spacing: 10
+                 });
+   grid.draw(document.getElementById("multiview1"));
+                 
+   </code></pre>
+   
    
    <h2>Dynamic Data Loading</h2>
    <p>Examples of on-the-fly data loading.</p>
