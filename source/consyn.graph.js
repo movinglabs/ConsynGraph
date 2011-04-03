@@ -13,7 +13,7 @@ var ConsynGraph = (function(){
     }
         
     var view_func = function ConsynGraph_View(series, opts){
-      this.series = series || [];
+      this.series = series || {};
       this.opts = extend({
         
       }, opts);
@@ -47,7 +47,9 @@ var ConsynGraph = (function(){
     
     return {
       View: view_func,
+      ViewGrid: viewgrid_func,
       Serie: serie_func,
+      
       
     };
 })();
