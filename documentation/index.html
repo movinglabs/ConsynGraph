@@ -39,17 +39,22 @@
      serie1:
        { 
          x: [5, 20 , 30, 50, 70],
-         y: [52, 62, 45, 25, 63]
+         y: [15, 35, 65, 75, 76]
        },
      serie2:
        {x: [10, 20 , 25, 54, 80],
          y: [52, 62, 40, 25, 63]
+         },
+         
+     serie3:
+       {x: [10, 20 , 25, 54, 80],
+         y: [150, 115, 140, 115, 163]
          }
     }, 
     { // options
          title: "Simple Graph",
          axes: {
-           west: true, 
+           west: {from_zero:true}, 
            south: {
              name: "Time",
              label: function(v){
@@ -73,12 +78,17 @@
            },
            serie2: {
              label: "Serie 2 Area",
-             line: true,
-             markers: true,
+             line: {smooth: 0},
+             markers: false,
              area: {
                color: '#CCF',
                opacity: 0.5
              }
+           },
+           serie3: {
+             label: "Serie 3",
+             line: true,
+             markers: true
            }
          
          }
@@ -209,10 +219,10 @@
    
    <h2>Series Options</h2>
     <dl>
-    <dt>curve_amount</dt>
+    <dt>smooth</dt>
     <dd>
-      Specify the curvature of linegraphs. 0 is hard edges (number)<br />
-      <em>Default value: 10</em>
+      Specify the smoothing of linegraphs. 0 is hard edges, values larger than 1.0 may result in strange artifacts. (number)<br />
+      <em>Default value: 0.5</em>
     </dd>
     </dl>
    

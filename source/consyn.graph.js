@@ -28,7 +28,20 @@ var ConsynGraph = (function(){
       }
       return a;
     }
-        
+    
+    var deepcopy = function deepcopy(obj) {
+      // TODO: this is not really great, just good enough to clone option structures
+      var out, i, len;
+      if (typeof obj === 'object') {
+        out = {};
+        for (i in obj) {
+          out[i] = deepcopy(obj[i]);
+        }
+        return out;
+      }
+      return obj;
+    }
+    
     var default_series_opts = {
       label:"",
       line: false,
@@ -41,6 +54,9 @@ var ConsynGraph = (function(){
       this.updateOptions(opts);
       this.updateData(series);
       this._objects = null;
+      
+      this.prepare_order = ['frame','title','background','series','legend','grid','axes'];
+      
       this.render_order = ['frame','title','background', 'grid','axes','series','legend'];
       
       
@@ -104,8 +120,8 @@ var ConsynGraph = (function(){
         
         var k;
         
-        for(var i in this.render_order){
-          k = this.render_order[i];
+        for(var i in this.prepare_order){
+          k = this.prepare_order[i];
           if(_graph.renderers[k])
             _graph.renderers[k].prepare(this, this.opts[k]);
         }
@@ -115,32 +131,6 @@ var ConsynGraph = (function(){
           if(_graph.renderers[k])
             this._objects[k] = _graph.renderers[k].render(this, this.opts[k]);
         }
-        
-        
-        // determine view parameters from the series that need to be displayed
-        for(var i in this.series){
-          
-        }
-        
-        // alter view parameters based on axes settings
-        
-        
-        // determine view to pixel parameters
-          // title or not
-          // padding
-          // space required for axes
-          // space required for legend
-        
-        // draw background
-        
-        // draw grid
-        
-        // draw axes
-        
-        // draw legend
-        
-        // draw each series
-        
         
       },
       redraw: function(){
@@ -188,6 +178,58 @@ var ConsynGraph = (function(){
             return s;
           }
         }),
+        
+        axes: new Renderer({
+          prepare: function(view,opts,context){
+
+            if(typeof opts.south =="object"){
+              if(opts.south.from_zero) view.viewparameters.x.range[0] = Math.min(0,view.viewparameters.x.range[0]);
+            }
+            if(typeof opts.west =="object"){
+              if(opts.west.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);                
+            }
+          },
+          render: function(view,opts,context){
+            
+            var vp = view.grapharea;
+            var s = view.paper.set();
+            
+            var y2 = vp.y + vp.height;  
+            var x2 = vp.x + vp.width;
+              
+            if(opts.south){
+              s.push ( this.renderAxis(vp.x, y2, x2, y2,[0,1], view, opts.south, context) );
+            }
+            
+            if(opts.west){
+              s.push ( this.renderAxis(vp.x, y2, vp.x, vp.y,[-1,0], view, opts.west, context) );
+            }
+            
+            return s;
+          },
+          renderAxis: function(x1,y1, x2,y2,orient, view, opts, context ){
+            
+            var numticks = 10;
+            var ticksize = 3;
+            
+            var dx = (x2-x1) / (numticks-1);
+            var dy = (y2-y1) / (numticks-1);
+            
+            var tickspath = "M"+x1+" "+y1;
+            
+            var px=x1, py=y1;
+            for(var i=0; i<numticks; i++){
+              tickspath+= "M"+px+" "+py+"l"+(ticksize*orient[0])+" "+(ticksize*orient[1]);
+              px+=dx;
+              py+=dy;
+            }
+            
+            return view.paper.path("M"+x1+" "+y1+"L"+x2+" "+y2 + tickspath );
+            
+          }
+        }),
+        
+        
         title: new Renderer({
             prepare: function(view,opts,context){
               // update view parameters to free space for a title
@@ -213,6 +255,7 @@ var ConsynGraph = (function(){
               }
               
               view.viewparameters = {x:{range: [_min_x, _max_x] }, y: {range: [_min_y, _max_y]} };
+              
             },
             render: function(view,opts,context){
               var s = view.paper.set();
@@ -258,33 +301,74 @@ var ConsynGraph = (function(){
             render: function(view,opts,context){
               if(opts===true){
                 opts = this.default
-              }
+              }else opts = extend(deepcopy(this.default), opts);
               
-//              alert(view.toPixelCoord([10,50]) );
+              if(!opts.smooth)opts.smooth=0;
+              var smooth=opts.smooth/2;
+
+              
               
               var path = "";
               var d = context.data;
-              var last = null;
+              var pc = [];
               for(var i=0; i<d.y.length; i++){
                 var y = d.y[i],
                     x = d.x[i];
                     
-                var p = view.toPixelCoord([x,y]);
-                if(last!==null){
-                   path += "L"+p[0]+" "+p[1]; // straight line
-                  
-                  //path += "C"+(p[0]-15)+" "+p[1]+" "+(p[0]+15)+" "+p[1]+" "+p[0]+" "+p[1];
+                pc[i] = view.toPixelCoord([x,y]);
+                
+              }
+              var p,last,_x1,_y1;
+              for(var i=0; i<pc.length; i++){
+                p = pc[i], last=pc[i-1];
+                if(i>0){
+                   var x1 = last[0];
+                   var y1 = last[1];
+                   var x2 = p[0];
+                   
+                   var y2 = p[1];
+                   
+                   if(i>1){
+                     x1 = last[0]+_x1;
+                     y1 = last[1]+_y1;
+                   
+                   }
+                   if(i<pc.length-1){
+                     var dx = pc[i+1][0]-last[0];
+                     var dy = pc[i+1][1]-last[1];
+                     
+                     var f = (p[0]-last[0])/dx;
+                     
+                     _x1 = (dx*(1-f))*smooth; 
+                     _y1 = (dy*(1-f))*smooth;
+                   
+                     x2 = p[0]-(dx*f)*smooth;
+                     y2 = p[1]-(dy*f)*smooth;
+                     
+                   }
+                   
+                   
+                   //path += "L"+p[0]+" "+p[1]; // straight line
+         /* bezier debugging code *
+                   view.paper.path("M"+last[0]+" "+last[1]+"L"+x1+" "+y1).attr({'stroke-dasharray':'- ',stroke:'#CCC'});
+                   view.paper.circle(x1,y1,2).attr({fill:'#0F0'});
+                   view.paper.path("M"+p[0]+" "+p[1]+"L"+x2+" "+y2).attr({'stroke-dasharray':'- ',stroke:'#CCC'});
+                   view.paper.circle(x2,y2,2).attr({fill:'#00F'});
+                   */
+                   path += "C"
+                        +  x1+" "+y1
+                        +  " "+x2+" "+y2
+                        +  " "+p[0]+" "+p[1];
                 }else{
                   path += "M"+p[0]+" "+p[1];
                 }
-                last=p;
                 
               }
-              return view.paper.path(path).attr({stroke:"#F00"});
+              return view.paper.path(path).attr({stroke:Raphael.getColor()});
               
             },
             default:{
-              
+              smooth: 0.5
             }
         }),
         area: new Renderer({
