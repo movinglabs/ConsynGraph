@@ -10,9 +10,8 @@
     code { background-color: #EFEFEF; }
     pre code { display: block; }
     </style>
-    <!--
+    
     <script type="text/javascript" src="../dependencies/jquery.min.js"></script>
-    -->
     <script src="../dependencies/raphael.js" type="text/javascript" charset="utf-8"></script>
     <script src="../source/consyn.graph.js" type="text/javascript" charset="utf-8"></script>
   
@@ -32,7 +31,7 @@
    <div style="height: 200px; width: 600px;" id="simple1"></div>
    
    
-   <script type="text/javascript">
+   <script type="text/javascript" id="script1">
    
    var view = new ConsynGraph.View(
      { // data series
@@ -53,12 +52,13 @@
     }, 
     { // options
          title: "Simple Graph",
+         frame: {fill:'#EEF'},
          axes: {
-           west: {from_zero:true}, 
+           west: {from_zero:true, name:"Value"}, 
            south: {
-             name: "Time",
+             name: "Blaat (x10)",
              label: function(v){
-               return v; // label formatting function
+               return ~~(v)/10; // label formatting function
              }
            }
          },
@@ -97,59 +97,12 @@
    
    </script>
    
-   <pre><code>
-   
-   var view = new ConsynGraph.View(
-     { // data series
-     serie1:
-       { 
-         x: [10, 20 , 30, 50, 70],
-         y: [52, 62, 45, 25, 63]
-       },
-     serie2:
-       {x: [10, 20 , 23, 54, 80],
-         y: [52, 62, 40, 25, 63]
-         }
-    }, 
-    { // options
-         title: "Simple Graph",
-         axes: {
-           west: true, 
-           south: {
-             name: "Time",
-             label: function(v){
-               return v; // label formatting function
-             }
-           }
-         },
-         grid: {
-           x: false,
-           y: {step: 10, start: 0 }
-         },
-         legend: {
-          type: 'box', 
-          position: {top: 10, right: 10}
-         },
-         series: {
-           serie1: {
-             label: "Serie 1 Line", 
-             markers: "o",
-             line: true
-           },
-           serie2: {
-             label: "Serie 2 Area",
-             line: true,
-             area: {
-               color: '#CCF',
-               opacity: 0.5
-             }
-           }
-         
-         }
-       }
-     ).draw(document.getElementById('simple1'));
-   
+   <pre><code id="script1code">
+   ... code sample loaded dynamically using JavaScript ...
    </code></pre>
+   <script type="text/javascript">
+     $("#script1code").html($("#script1").html());
+   </script>
   
    <h2>Data Description</h2>
    

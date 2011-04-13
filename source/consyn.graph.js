@@ -1,5 +1,5 @@
 /*
- * Raphael Based Graphing Library
+ * ConsynGraph - A Raphael Based Graphing Library
  *
  *
  */
@@ -236,8 +236,9 @@ var ConsynGraph = (function(){
             var dx = (x2-x1) / (numticks-1);
             var dy = (y2-y1) / (numticks-1);
             
-            var datarange = view.viewparameters.x.range;
-            if(orient[0]==0)datarange = view.viewparameters.y.range;
+            var datarange = view.viewparameters.y.range;
+            if(orient[0]==0)datarange = view.viewparameters.x.range;
+            
             
             var textanchor='middle';
             if(orient[0]==-1)textanchor='end';
@@ -252,10 +253,9 @@ var ConsynGraph = (function(){
               labfun = opts.label;
             }
               
-            
             var pdata=datarange[0], px=x1, py=y1, lab="";
             for(var i=0; i<numticks; i++){
-              tickspath+= "M"+px+" "+py+"l"+(ticksize*orient[0])+" "+(ticksize*orient[1]);
+              tickspath+= "M"+(~~px)+" "+(~~py)+"l"+(~~(ticksize*orient[0]))+" "+(~~(ticksize*orient[1]));
               lab = pdata;
               
               lab = labfun(lab);
@@ -271,6 +271,16 @@ var ConsynGraph = (function(){
             }
             
             set.push( view.paper.path("M"+x1+" "+y1+"L"+x2+" "+y2 + tickspath ) );
+            
+            if(opts.name){
+              set.push( 
+                view.paper.text(
+                 x1 + ~~((x2-x1)/2 + orient[0]*50),
+                 y1 + ~~((y2-y1)/2 + orient[1]*25),
+                 opts.name).attr({'font-size': 11, rotation: orient[0]?-90:0})
+                 );
+            }
+            
             return set;
           },
           formatLabel: function(v){
@@ -302,7 +312,9 @@ var ConsynGraph = (function(){
         }),
         legend: new Renderer({
             prepare: function(view,opts,context){
-              // update view parameters to free space for a title
+              // update view parameters to free space for a legend
+              
+              view.grapharea.width-=150;
             },
             render: function(view,opts,context){
               var num_series = 0;
@@ -314,10 +326,10 @@ var ConsynGraph = (function(){
               var set = view.paper.set();
               if(num_series>0){
                 var dy = 20;
-                var w = 200;
+                var w = 150;
                 var h = dy*num_series;
-                var x = view.viewport.width - w - 10;
-                var y = 10;
+                var x = view.viewport.width - w - 5;
+                var y = view.options.gutter[0];
                 var box = view.paper.rect(x, y, w, h)
                   .attr({fill:'#FFF','stroke-width':1,'stroke':'#DDD'});
                   set.push(box);
