@@ -50,7 +50,7 @@ var ConsynGraph = (function(){
     
     var view_func = function ConsynGraph_View(series, opts){
       this.series = {};
-      this.opts = {gutter: [10,20,10,20] };
+      this.options = {gutter: [10,20,10,20] };
       this.updateOptions(opts);
       this.updateData(series);
       this._objects = null;
@@ -72,7 +72,7 @@ var ConsynGraph = (function(){
     }
     extend(Renderer.prototype, {
       prepare:function(view, opts, context){
-        return view;
+        return opts;
       },
       render: function(view,opts, context){
         return view.paper.set();
@@ -87,10 +87,10 @@ var ConsynGraph = (function(){
         if(typeof w == "undefined") w=el.offsetWidth-x;
         if(typeof h == "undefined") h=el.offsetHeight-y;
         
-        var gx = this.opts.gutter[0],
-            gy = this.opts.gutter[3],
-            gw = gx+this.opts.gutter[2],
-            gh = gy+this.opts.gutter[1];
+        var gx = this.options.gutter[0],
+            gy = this.options.gutter[3],
+            gw = gx+this.options.gutter[2],
+            gh = gy+this.options.gutter[1];
         
         this.viewport = {x:x,y:y,width:w,height:h};
         this.grapharea = {x:x+gx,y:y+gy,width:w-gw,height:h-gh};
@@ -118,18 +118,20 @@ var ConsynGraph = (function(){
       _draw: function(){
         var paper = this.paper;
         
-        var k;
+        var k, ret;
         
         for(var i in this.prepare_order){
           k = this.prepare_order[i];
-          if(_graph.renderers[k])
-            _graph.renderers[k].prepare(this, this.opts[k]);
+          if(_graph.renderers[k]){
+            ret = _graph.renderers[k].prepare(this, this.options[k]);
+            if(typeof ret == "object") this.options[k] = ret; 
+          }
         }
 
         for(var i in this.render_order){
           k = this.render_order[i];
-          if(_graph.renderers[k])
-            this._objects[k] = _graph.renderers[k].render(this, this.opts[k]);
+          if(_graph.renderers[k] && this.options[k]!==false)
+            this._objects[k] = _graph.renderers[k].render(this, this.options[k]);
         }
         
       },
@@ -157,7 +159,7 @@ var ConsynGraph = (function(){
         
       },
       updateOptions: function(opts){
-        this.opts = extend(this.opts, opts);
+        this.options = extend(this.options, opts);
       }
     };
     
@@ -169,11 +171,14 @@ var ConsynGraph = (function(){
       renderers:{
         frame: new Renderer({
           render: function(view,opts,context){
+            opts = extend({fill:'#EEE',stroke:'#DDD'},opts); 
+            
+            
             var s = view.paper.set();
             var frame = view.paper.rect(view.viewport.x,view.viewport.y,
                                         view.viewport.width,view.viewport.height
                                      )
-                                     .attr({fill:'#EEF',stroke:'#0F0'});
+                                     .attr(opts);
             s.push(frame);
             return s;
           }
@@ -228,6 +233,18 @@ var ConsynGraph = (function(){
             
           }
         }),
+        background: new Renderer({
+            render: function(view,opts,context){
+              if(typeof opts != "object") opts = {fill:'#FFF','stroke-width': 0};
+               var s = view.paper.set();
+               var frame = view.paper.rect(view.grapharea.x,view.grapharea.y,
+                                            view.grapharea.width,view.grapharea.height
+                                         )
+                                         .attr(opts);
+               s.push(frame);
+               return s;
+            }
+        }),
         
         
         title: new Renderer({
@@ -235,6 +252,54 @@ var ConsynGraph = (function(){
               // update view parameters to free space for a title
             },
             render: function(view,opts,context){ return view.paper.set();}
+        }),
+        legend: new Renderer({
+            prepare: function(view,opts,context){
+              // update view parameters to free space for a title
+            },
+            render: function(view,opts,context){
+              var num_series = 0;
+              
+              for(var i in view.series){
+                num_series++; 
+              }
+              
+              var set = view.paper.set();
+              if(num_series>0){
+                var dy = 20;
+                var w = 200;
+                var h = dy*num_series;
+                var x = view.viewport.width - w - 10;
+                var y = 10;
+                var box = view.paper.rect(x, y, w, h)
+                  .attr({fill:'#FFF','stroke-width':1,'stroke':'#DDD'});
+                  set.push(box);
+                  
+                var xt = x;
+                var yt = y+10;
+                var ta, lab, sopts,col;
+                for(var i in view.series){
+                  // TODO: move this into seperate renderLegend methods for each type of series renderer.  So we can have a complete legend with lines, markers, area, etc.
+                  lab = ""+i;
+                  sopts = view.options.series[i];
+                  if(typeof sopts != "undefined"){
+                    if(typeof sopts.line != "undefined")
+                      col = sopts.line.stroke;
+                    else col = sopts.area.color;
+                    
+                    view.paper.path("M"+xt+" "+yt+"l18 0").attr({stroke:col,'stroke-width':2});
+                    
+                    if( typeof sopts.label != "undefined"){
+                      lab = sopts.label;
+                    }
+                  }
+                  ta = view.paper.text(xt+20, yt, lab).attr({color:'#000','text-anchor':'start','font-size':10});
+                  set.push(ta);
+                  yt+=dy;
+                }
+              }
+              return set;
+            }
         }),
         series: new Renderer({
             prepare: function(view,opts,context){
@@ -256,12 +321,21 @@ var ConsynGraph = (function(){
               
               view.viewparameters = {x:{range: [_min_x, _max_x] }, y: {range: [_min_y, _max_y]} };
               
+              
+              for(var i in view.series){
+                var sopt = view.options.series[i];
+                for(var j in sopt){
+                  if(sopt[j]===false) continue;
+                  ret = _graph.renderers[j].prepare(view, sopt[j], {data:view.series[i]} );
+                  if(typeof ret == "object") sopt[j] = ret; 
+                }
+              }
             },
             render: function(view,opts,context){
               var s = view.paper.set();
               
               for(var i in view.series){
-                var sopt = view.opts.series[i];
+                var sopt = view.options.series[i];
                 for(var j in sopt){
                   if(sopt[j]===false) continue;
                   s.push( _graph.renderers[j].render(view, sopt[j], {data:view.series[i]} ) );
@@ -298,12 +372,20 @@ var ConsynGraph = (function(){
             },default:{symbol: "o"}
         }),
         line: new Renderer({
-            render: function(view,opts,context){
+            
+            prepare: function(view,opts, context){
               if(opts===true){
-                opts = this.default
+                opts = deepcopy(this.default);
               }else opts = extend(deepcopy(this.default), opts);
               
               if(!opts.smooth)opts.smooth=0;
+              if(typeof opts.stroke=="undefined"){
+                opts.stroke = Raphael.getColor();
+              }
+              return opts;
+            },
+            render: function(view,opts,context){
+              
               var smooth=opts.smooth/2;
 
               
@@ -364,7 +446,7 @@ var ConsynGraph = (function(){
                 }
                 
               }
-              return view.paper.path(path).attr({stroke:Raphael.getColor()});
+              return view.paper.path(path).attr({stroke:opts.stroke});
               
             },
             default:{
