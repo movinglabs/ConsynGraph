@@ -199,9 +199,14 @@ var ConsynGraph = (function(){
 
             if(typeof opts.south =="object"){
               if(opts.south.from_zero) view.viewparameters.x.range[0] = Math.min(0,view.viewparameters.x.range[0]);
+              var dy = 20;
+              view.grapharea.height-=dy;
             }
             if(typeof opts.west =="object"){
-              if(opts.west.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);                
+              if(opts.west.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);
+              var dx = 50;
+              view.grapharea.x+=dx;
+              view.grapharea.width-=dx;
             }
           },
           render: function(view,opts,context){
@@ -223,24 +228,56 @@ var ConsynGraph = (function(){
             return s;
           },
           renderAxis: function(x1,y1, x2,y2,orient, view, opts, context ){
-            
+            var set = view.paper.set();
             var numticks = 10;
             var ticksize = 3;
+            var textspace = 10;
             
             var dx = (x2-x1) / (numticks-1);
             var dy = (y2-y1) / (numticks-1);
             
+            var datarange = view.viewparameters.x.range;
+            if(orient[0]==0)datarange = view.viewparameters.y.range;
+            
+            var textanchor='middle';
+            if(orient[0]==-1)textanchor='end';
+            else if(orient[0]==1)textanchor='start';
+            
+            var ddata = (datarange[1]-datarange[0]) / (numticks-1);
+            
             var tickspath = "M"+x1+" "+y1;
             
-            var px=x1, py=y1;
+            var labfun = this.formatLabel;
+            if(typeof opts.label=="function"){
+              labfun = opts.label;
+            }
+              
+            
+            var pdata=datarange[0], px=x1, py=y1, lab="";
             for(var i=0; i<numticks; i++){
               tickspath+= "M"+px+" "+py+"l"+(ticksize*orient[0])+" "+(ticksize*orient[1]);
+              lab = pdata;
+              
+              lab = labfun(lab);
+              set.push ( 
+                 view.paper.text(px+(textspace*orient[0]), py+(textspace*orient[1]), lab )
+                 .attr({'font-size':8,'text-anchor':textanchor}) 
+                    );
+
               px+=dx;
               py+=dy;
+              pdata+=ddata;
+              
             }
             
-            return view.paper.path("M"+x1+" "+y1+"L"+x2+" "+y2 + tickspath );
-            
+            set.push( view.paper.path("M"+x1+" "+y1+"L"+x2+" "+y2 + tickspath ) );
+            return set;
+          },
+          formatLabel: function(v){
+            if(typeof v=="number"){
+               return ~~(v*100)/100;
+            }
+            return v; 
           }
         }),
         background: new Renderer({
