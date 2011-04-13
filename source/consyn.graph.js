@@ -76,7 +76,17 @@ var ConsynGraph = (function(){
       },
       render: function(view,opts, context){
         return view.paper.set();
-      }
+      }});
+    
+    /* SeriesRenderer is a renderer specific to dataseries. It's methods are called by the series-renderer and legend-renderer */
+    var SeriesRenderer = function(e){
+      extend(this,e); 
+    }
+    extend(SeriesRenderer.prototype, Renderer.prototype);
+    extend(SeriesRenderer.prototype, {
+        renderLegend: function(x,y,w,h, view,opts,context){
+          return view.paper.set(); 
+       }
     });
     
     view_func.prototype = {
@@ -275,25 +285,27 @@ var ConsynGraph = (function(){
                   .attr({fill:'#FFF','stroke-width':1,'stroke':'#DDD'});
                   set.push(box);
                   
-                var xt = x;
+                var xt = x+2;
                 var yt = y+10;
                 var ta, lab, sopts,col;
                 for(var i in view.series){
-                  // TODO: move this into seperate renderLegend methods for each type of series renderer.  So we can have a complete legend with lines, markers, area, etc.
                   lab = ""+i;
                   sopts = view.options.series[i];
                   if(typeof sopts != "undefined"){
-                    if(typeof sopts.line != "undefined")
-                      col = sopts.line.stroke;
-                    else col = sopts.area.color;
-                    
-                    view.paper.path("M"+xt+" "+yt+"l18 0").attr({stroke:col,'stroke-width':2});
+                    for(var k in sopts){
+                      if(typeof _graph.renderers[k] !="undefined"){
+                        if(sopts[k]===false) continue;
+                        set.push(
+                          _graph.renderers[k].renderLegend(xt,yt,20,20, view,sopts[k],context)
+                          );
+                      }
+                    }
                     
                     if( typeof sopts.label != "undefined"){
                       lab = sopts.label;
                     }
                   }
-                  ta = view.paper.text(xt+20, yt, lab).attr({color:'#000','text-anchor':'start','font-size':10});
+                  ta = view.paper.text(xt+22, yt, lab).attr({color:'#000','text-anchor':'start','font-size':10});
                   set.push(ta);
                   yt+=dy;
                 }
@@ -348,7 +360,7 @@ var ConsynGraph = (function(){
         
         // serie specific renderers
         
-        markers: new Renderer({
+        markers: new SeriesRenderer({
             
             render: function(view,opts,context){
               var s = view.paper.set();
@@ -369,9 +381,14 @@ var ConsynGraph = (function(){
               }
 
               return s;
-            },default:{symbol: "o"}
+            },
+            renderLegend: function(x,y,w,h, view, opts, context){
+              return view.paper.circle( ~~(x+(w/2)), y, ~~(w/4) );
+              
+            },
+            default:{symbol: "o"}
         }),
-        line: new Renderer({
+        line: new SeriesRenderer({
             
             prepare: function(view,opts, context){
               if(opts===true){
@@ -449,14 +466,20 @@ var ConsynGraph = (function(){
               return view.paper.path(path).attr({stroke:opts.stroke});
               
             },
+            renderLegend: function(x,y,w,h, view, opts, context){
+              var col = opts.stroke;
+              return view.paper.path("M"+x+" "+y+"l"+w+" 0").attr({stroke:col,'stroke-width':2});
+              
+            },
+            
             default:{
               smooth: 0.5
             }
         }),
-        area: new Renderer({
+        area: new SeriesRenderer({
             
         }),
-        label: new Renderer({
+        label: new SeriesRenderer({
             
         }),
         
