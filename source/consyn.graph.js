@@ -175,6 +175,26 @@ var ConsynGraph = (function(){
     
     
     extend(_graph, {
+      Func: {
+        timestampLabels: function(v, i, min, max){
+          // TODO: how to make sure all ticks are distinct?
+          // TODO: prevent showing redundant info
+          var d = new Date(v*1000);
+          var len = max-min;
+          var date = d.getDate();
+          var m = d.getMinutes();
+          if(m<10)m = "0"+m;
+          if(len < 48*3600){
+            return d.getHours()+":"+m;            
+          }else if(len < 15*24*3600){
+            return date+(date==1?'st':(date==2?'nd':(date==3?'rd':'th')))+" "+d.getHours()+":"+m;
+          }else if(len < 60*24*3600){
+            return d.getDate();
+          }else{
+            return d.toDateString();
+          }
+        }
+      },
       View: view_func,
       Renderer: Renderer,
       
@@ -253,17 +273,20 @@ var ConsynGraph = (function(){
               labfun = opts.label;
             }
               
-            var pdata=datarange[0], px=x1, py=y1, lab="";
+            var pdata=datarange[0], px=x1, py=y1, lab="",prevlab="";
             for(var i=0; i<numticks; i++){
               tickspath+= "M"+(~~px)+" "+(~~py)+"l"+(~~(ticksize*orient[0]))+" "+(~~(ticksize*orient[1]));
               lab = pdata;
               
-              lab = labfun(lab);
-              set.push ( 
-                 view.paper.text(px+(textspace*orient[0]), py+(textspace*orient[1]), lab )
-                 .attr({'font-size':8,'text-anchor':textanchor}) 
-                    );
-
+              lab = labfun(lab, i, datarange[0], datarange[1]);
+              if(lab!=prevlab){
+                set.push ( 
+                   view.paper.text(px+(textspace*orient[0]), py+(textspace*orient[1]), lab )
+                   .attr({'font-size':8,'text-anchor':textanchor}) 
+                      );
+              }
+              prevlab=lab;
+              
               px+=dx;
               py+=dy;
               pdata+=ddata;
@@ -283,7 +306,7 @@ var ConsynGraph = (function(){
             
             return set;
           },
-          formatLabel: function(v){
+          formatLabel: function(v, i, min, max){
             if(typeof v=="number"){
                return ~~(v*100)/100;
             }
