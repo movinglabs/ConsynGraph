@@ -478,7 +478,8 @@ var ConsynGraph = (function(){
                 }
                 if(opts.attr.fill==true){
                   opts.attr.fill=context.color; 
-                }else{
+                }
+                if(typeof opts.attr.stroke == "undefined" || opts.attr.stroke==true){
                   opts.attr.stroke=context.color; 
                 }  
               m.attr(opts.attr); 
