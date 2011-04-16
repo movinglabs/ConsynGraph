@@ -279,7 +279,7 @@ var ConsynGraph = (function(){
               lab = pdata;
               
               lab = labfun(lab, i, datarange[0], datarange[1]);
-              if(lab!=prevlab){
+              if(lab!==prevlab){
                 set.push ( 
                    view.paper.text(px+(textspace*orient[0]), py+(textspace*orient[1]), lab )
                    .attr({'font-size':8,'text-anchor':textanchor}) 
