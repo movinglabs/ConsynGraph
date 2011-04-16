@@ -97,10 +97,10 @@ var ConsynGraph = (function(){
         if(typeof w == "undefined") w=el.offsetWidth-x;
         if(typeof h == "undefined") h=el.offsetHeight-y;
         
-        var gx = this.options.gutter[0],
-            gy = this.options.gutter[3],
-            gw = gx+this.options.gutter[2],
-            gh = gy+this.options.gutter[1];
+        var gx = this.options.gutter[3],
+            gy = this.options.gutter[0],
+            gw = gx+this.options.gutter[1],
+            gh = gy+this.options.gutter[2];
         
         this.viewport = {x:x,y:y,width:w,height:h};
         this.grapharea = {x:x+gx,y:y+gy,width:w-gw,height:h-gh};
@@ -219,7 +219,7 @@ var ConsynGraph = (function(){
 
             if(typeof opts.south =="object"){
               if(opts.south.from_zero) view.viewparameters.x.range[0] = Math.min(0,view.viewparameters.x.range[0]);
-              var dy = 20;
+              var dy = 30;
               view.grapharea.height-=dy;
             }
             if(typeof opts.west =="object"){
