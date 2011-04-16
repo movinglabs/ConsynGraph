@@ -571,10 +571,14 @@ var ConsynGraph = (function(){
                    view.paper.path("M"+p[0]+" "+p[1]+"L"+x2+" "+y2).attr({'stroke-dasharray':'- ',stroke:'#CCC'});
                    view.paper.circle(x2,y2,2).attr({fill:'#00F'});
                    */
-                   path += "C"
-                        +  x1+" "+y1
-                        +  " "+x2+" "+y2
-                        +  " "+p[0]+" "+p[1];
+                   if(opts.step){
+                     path += "L"+p[0]+" "+last[1]+"M"+p[0]+" "+p[1];
+                   }else{
+                     path += "C"
+                          +  x1+" "+y1
+                          +  " "+x2+" "+y2
+                          +  " "+p[0]+" "+p[1];
+                   }
                 }else{
                   path += "M"+p[0]+" "+p[1];
                 }
