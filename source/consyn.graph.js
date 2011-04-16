@@ -21,6 +21,11 @@ if(typeof Array.prototype.max == "undefined"){
 var ConsynGraph = (function(){
     var _graph = {};
     
+    var colors = [];
+    for(var i=0; i<10; i++){
+      colors[i] = Raphael.getColor();
+    }
+    
     var extend = function(a,b){
       if(typeof b=="undefined") return;
       for(var i in b){
@@ -54,6 +59,8 @@ var ConsynGraph = (function(){
       this.updateOptions(opts);
       this.updateData(series);
       this._objects = null;
+      
+      this.colors = colors;
       
       this.prepare_order = ['frame','title','background','series','legend','grid','axes'];
       
@@ -360,6 +367,7 @@ var ConsynGraph = (function(){
                 var xt = x+2;
                 var yt = y+10;
                 var ta, lab, sopts,col;
+                var c=0;
                 for(var i in view.series){
                   lab = ""+i;
                   sopts = view.options.series[i];
@@ -368,7 +376,7 @@ var ConsynGraph = (function(){
                       if(typeof _graph.renderers[k] !="undefined"){
                         if(sopts[k]===false) continue;
                         set.push(
-                          _graph.renderers[k].renderLegend(xt,yt,20,20, view,sopts[k],context)
+                          _graph.renderers[k].renderLegend(xt,yt,20,20, view,sopts[k],{color: view.colors[c%view.colors.length]})
                           );
                       }
                     }
@@ -380,11 +388,13 @@ var ConsynGraph = (function(){
                   ta = view.paper.text(xt+22, yt, lab).attr({color:'#000','text-anchor':'start','font-size':10});
                   set.push(ta);
                   yt+=dy;
+                  c++;
                 }
               }
               return set;
             }
         }),
+        
         series: new Renderer({
             prepare: function(view,opts,context){
               // update view parameters based on series data 
@@ -404,26 +414,27 @@ var ConsynGraph = (function(){
               }
               
               view.viewparameters = {x:{range: [_min_x, _max_x] }, y: {range: [_min_y, _max_y]} };
-              
-              
+              var c = 0;
               for(var i in view.series){
                 var sopt = view.options.series[i];
                 for(var j in sopt){
                   if(sopt[j]===false) continue;
-                  ret = _graph.renderers[j].prepare(view, sopt[j], {data:view.series[i]} );
+                  ret = _graph.renderers[j].prepare(view, sopt[j], {data:view.series[i], color: view.colors[c%view.colors.length]} );
                   if(typeof ret == "object") sopt[j] = ret; 
                 }
+                c++;
               }
             },
             render: function(view,opts,context){
               var s = view.paper.set();
-              
+              var c=0;
               for(var i in view.series){
                 var sopt = view.options.series[i];
                 for(var j in sopt){
                   if(sopt[j]===false) continue;
-                  s.push( _graph.renderers[j].render(view, sopt[j], {data:view.series[i]} ) );
+                  s.push( _graph.renderers[j].render(view, sopt[j], {data:view.series[i], color: view.colors[c%view.colors.length]} ) );
                 }
+                c++;
               }
               
               return s;
@@ -436,9 +447,7 @@ var ConsynGraph = (function(){
             
             render: function(view,opts,context){
               var s = view.paper.set();
-              if(opts===true){
-                opts = this.default
-              }
+              opts = this.fixOpts(opts);
               
 //              alert(view.toPixelCoord([10,50]) );
               
@@ -449,16 +458,50 @@ var ConsynGraph = (function(){
                     
                 var p = view.toPixelCoord([x,y]);
                 
-                s.push( view.paper.circle(p[0], p[1], 5) );
+                var m = this.renderMarker(p[0], p[1], opts.size, view, opts, context);
+                
+                s.push(m);
               }
 
               return s;
             },
             renderLegend: function(x,y,w,h, view, opts, context){
-              return view.paper.circle( ~~(x+(w/2)), y, ~~(w/4) );
+              opts = this.fixOpts(opts);
+              return this.renderMarker( ~~(x+(w/2)), y, Math.min(opts.size,
+               ~~(w/4)), view, opts, context);
               
             },
-            default:{symbol: "o"}
+            renderMarker: function(x, y, size, view, opts, context){
+              var m = this.symbols[opts.symbol](view.paper, x, y, size, opts.attr);
+              if(typeof opts.attr == "undefined"){
+                  opts.attr = {}; 
+                }
+                if(opts.attr.fill==true){
+                  opts.attr.fill=context.color; 
+                }else{
+                  opts.attr.stroke=context.color; 
+                }  
+              m.attr(opts.attr); 
+              return m;
+            },
+            fixOpts: function(opts){
+              if(typeof opts == "undefined" || opts===true){
+                opts = this.default
+              }
+              if(""+opts === opts) opts = extend(deepcopy(this.default),{symbol:opts});
+              return opts;
+            },
+            default:{symbol: "o", size: 5},
+            symbols:{
+              "o": function(paper,x,y,s){
+                return paper.circle(x,y,s);
+              },
+              "circle": function(paper,x,y,s){
+                return paper.circle(x,y,s);
+              },
+              
+              
+            }
         }),
         line: new SeriesRenderer({
             
@@ -468,8 +511,8 @@ var ConsynGraph = (function(){
               }else opts = extend(deepcopy(this.default), opts);
               
               if(!opts.smooth)opts.smooth=0;
-              if(typeof opts.stroke=="undefined"){
-                opts.stroke = Raphael.getColor();
+              if(typeof opts.stroke=="undefined" && context.color){
+                opts.stroke = context.color;
               }
               return opts;
             },
