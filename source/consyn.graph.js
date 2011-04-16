@@ -24,6 +24,7 @@ var ConsynGraph = (function(){
     var colors = [];
     for(var i=0; i<10; i++){
       colors[i] = Raphael.getColor();
+      Raphael.getColor(); // skip one color, for better difference
     }
     
     var extend = function(a,b){
@@ -376,7 +377,7 @@ var ConsynGraph = (function(){
                       if(typeof _graph.renderers[k] !="undefined"){
                         if(sopts[k]===false) continue;
                         set.push(
-                          _graph.renderers[k].renderLegend(xt,yt,20,20, view,sopts[k],{color: view.colors[c%view.colors.length]})
+                          _graph.renderers[k].renderLegend(xt,yt,20,20, view,sopts[k], {color: view.colors[c%view.colors.length]})
                           );
                       }
                     }
@@ -388,7 +389,7 @@ var ConsynGraph = (function(){
                   ta = view.paper.text(xt+22, yt, lab).attr({color:'#000','text-anchor':'start','font-size':10});
                   set.push(ta);
                   yt+=dy;
-                  c++;
+                  c++;                  
                 }
               }
               return set;
@@ -474,20 +475,20 @@ var ConsynGraph = (function(){
             renderMarker: function(x, y, size, view, opts, context){
               var m = this.symbols[opts.symbol](view.paper, x, y, size, opts.attr);
               if(typeof opts.attr == "undefined"){
-                  opts.attr = {}; 
-                }
-                if(opts.attr.fill==true){
-                  opts.attr.fill=context.color; 
-                }
-                if(typeof opts.attr.stroke == "undefined" || opts.attr.stroke==true){
-                  opts.attr.stroke=context.color; 
-                }  
+                opts.attr = {}; 
+              }
+              if(opts.attr.fill===true){
+                opts.attr.fill=context.color; 
+              }
+              if((typeof opts.attr.stroke == "undefined") || opts.attr.stroke===true){
+                opts.attr.stroke=context.color;
+              }  
               m.attr(opts.attr); 
               return m;
             },
             fixOpts: function(opts){
               if(typeof opts == "undefined" || opts===true){
-                opts = this.default
+                opts =  deepcopy(this.default)
               }
               if(""+opts === opts) opts = extend(deepcopy(this.default),{symbol:opts});
               return opts;
