@@ -184,7 +184,7 @@ var ConsynGraph = (function(){
              view.paper.circle(x2,y2,2).attr({fill:'#00F'});
              */
              if(opts.step){
-               path += "L"+p[0]+" "+last[1]+((opts.step=="continues")?"L":"M")+p[0]+" "+p[1];
+               path += "L"+p[0]+" "+last[1]+((opts.step=="continuous")?"L":"M")+p[0]+" "+p[1];
              }else{
                path += "C"
                     +  x1+" "+y1
