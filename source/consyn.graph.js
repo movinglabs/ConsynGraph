@@ -150,6 +150,19 @@ var ConsynGraph = (function(){
         return [~~(x),~~(y)];
         
       },
+      formatNumber: function(n, size){
+        if(typeof size=="undefined") size=5;
+        var s = ""+n;
+        if(s.length > size){
+          var off = s.indexOf(".");
+          if(off<size){
+            s = s.substring(0,size); 
+          }else{
+            s = s.substring(0,off); 
+          }
+        }
+        return s;
+      },
       toPathString: function(d, opts){
         smooth=opts.smooth/2;
 
@@ -491,15 +504,15 @@ var ConsynGraph = (function(){
             
             var ruler = view.paper.rect(vp.x, vp.y, 2, vp.height).attr({fill:'#00C',opacity:0.2,'stroke-width':0});
             
-            var xlabel = view.paper.text(vp.x,y2,"").attr({'stroke':'#00C'});
+            //var xlabel = view.paper.text(vp.x,y2,"").attr({'stroke':'#00C'});
             
-            var serielabels = [];
-            var serielabeltext = [];
+            var serielabels ={};
+            var serielabeltext = {};
+            var LAB_WIDTH=30, LAB_HEIGHT=12;
             
             for(var i in view.series){
                 var vs = view.series[i];
-                serielabels[i] = view.paper.rect(0,0,30,12).attr({fill:'#000',opacity: 0.8});
-                serielabeltext[i]=view.paper.text(15,6,"...").attr({'font-size':10,stroke:'#FFF'})
+                serielabels[i] = view.paper.rect(0,0,LAB_WIDTH,LAB_HEIGHT).attr({fill:'#000',opacity: 0.8});                serielabeltext[i]=view.paper.text(0,0,"").attr({'font-size':10,stroke:'#FFF'})
                  
                 serielabels[i].attr({x:vp.x,y:vp.y});
                 serielabeltext[i].attr({x:vp.x+15,y:vp.y+6});
@@ -511,8 +524,9 @@ var ConsynGraph = (function(){
               
               var coord = view.fromPixelCoord([x,y]);
               var cx = coord[0];
-              xlabel.attr({x:x, text: (Math.round(cx*10)/10)});
+              //xlabel.attr({x:x, text: (Math.round(cx*10)/10)});
               
+              var cps = [];
               
               for(var i in view.series){
                 var vs = view.series[i];
@@ -526,17 +540,43 @@ var ConsynGraph = (function(){
                   }
                 }
                 
-                var cp = [vs.x[closest], vs.y[closest] ];
+                cps[cps.length] = [vs.x[closest], vs.y[closest], i ];
+              }
+              
+              cps.sort(function(a,b){
+                  return b[1]-a[1]; 
+              });
+              
+              var lastx = 0, lasty=0;
+              for(var ix=0; ix<cps.length;ix++){
+                var cp = cps[ix];
+                var i = cp[2];
                 var labcoord = view.toPixelCoord(cp);
                 
-                serielabels[i].attr({x:labcoord[0], y:labcoord[1],text:cp[1]});
-                serielabeltext[i].attr({x:labcoord[0]+15, y:labcoord[1]+6,text:cp[1]});
+                var x =labcoord[0];
+                var y =labcoord[1];
+                
+                if(  (x+LAB_WIDTH  > lastx && x < lastx+LAB_WIDTH)
+                  && (y+LAB_HEIGHT > lasty && y < lasty+LAB_HEIGHT)){ // actual overlap
+                  if(x<=lastx){ // flip the label to the left
+                    x-=LAB_WIDTH;
+                  }else{ 
+                    y-=LAB_HEIGHT;
+                  }
+                  
+                }
+                
+                lastx = x;
+                lasty = y;
+                
+                serielabels[i].attr({x:x, y:y,text:cp[1]});
+                serielabeltext[i].attr({x:x+(LAB_WIDTH/2), y:y+(LAB_HEIGHT/2),text: view.formatNumber(cp[1],5)});
                 
               }
               
             };
             
-            _showlabels(vp.width,0);
+            _showlabels(vp.x+vp.width,0);
             
             rect.mousemove(function(e){
              
