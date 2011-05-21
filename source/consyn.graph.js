@@ -133,6 +133,71 @@ var ConsynGraph = (function(){
         return [~~(x),~~(y)];
         
       },
+      toPathString: function(d, opts){
+        smooth=opts.smooth/2;
+
+        
+        var path="";
+        var pc = [];
+        for(var i=0; i<d.y.length; i++){
+          var y = d.y[i],
+              x = d.x[i];
+              
+          pc[i] = this.toPixelCoord([x,y]);
+          
+        }
+        var p,last,_x1,_y1;
+        for(var i=0; i<pc.length; i++){
+          p = pc[i], last=pc[i-1];
+          if(i>0){
+             var x1 = last[0];
+             var y1 = last[1];
+             var x2 = p[0];
+             
+             var y2 = p[1];
+             
+             if(i>1){
+               x1 = last[0]+_x1;
+               y1 = last[1]+_y1;
+             
+             }
+             if(i<pc.length-1){
+               var dx = pc[i+1][0]-last[0];
+               var dy = pc[i+1][1]-last[1];
+               
+               var f = (p[0]-last[0])/dx;
+               
+               _x1 = (dx*(1-f))*smooth; 
+               _y1 = (dy*(1-f))*smooth;
+             
+               x2 = p[0]-(dx*f)*smooth;
+               y2 = p[1]-(dy*f)*smooth;
+               
+             }
+             
+             
+             //path += "L"+p[0]+" "+p[1]; // straight line
+   /* bezier debugging code *
+             view.paper.path("M"+last[0]+" "+last[1]+"L"+x1+" "+y1).attr({'stroke-dasharray':'- ',stroke:'#CCC'});
+             view.paper.circle(x1,y1,2).attr({fill:'#0F0'});
+             view.paper.path("M"+p[0]+" "+p[1]+"L"+x2+" "+y2).attr({'stroke-dasharray':'- ',stroke:'#CCC'});
+             view.paper.circle(x2,y2,2).attr({fill:'#00F'});
+             */
+             if(opts.step){
+               path += "L"+p[0]+" "+last[1]+"M"+p[0]+" "+p[1];
+             }else{
+               path += "C"
+                    +  x1+" "+y1
+                    +  " "+x2+" "+y2
+                    +  " "+p[0]+" "+p[1];
+             }
+          }else{
+            path += "M"+p[0]+" "+p[1];
+          }
+        }
+        return path;
+      },
+
       _draw: function(){
         var paper = this.paper;
         
@@ -520,70 +585,12 @@ var ConsynGraph = (function(){
             },
             render: function(view,opts,context){
               
-              var smooth=opts.smooth/2;
 
               
               
-              var path = "";
               var d = context.data;
-              var pc = [];
-              for(var i=0; i<d.y.length; i++){
-                var y = d.y[i],
-                    x = d.x[i];
-                    
-                pc[i] = view.toPixelCoord([x,y]);
+              var path = view.toPathString(d, opts);
                 
-              }
-              var p,last,_x1,_y1;
-              for(var i=0; i<pc.length; i++){
-                p = pc[i], last=pc[i-1];
-                if(i>0){
-                   var x1 = last[0];
-                   var y1 = last[1];
-                   var x2 = p[0];
-                   
-                   var y2 = p[1];
-                   
-                   if(i>1){
-                     x1 = last[0]+_x1;
-                     y1 = last[1]+_y1;
-                   
-                   }
-                   if(i<pc.length-1){
-                     var dx = pc[i+1][0]-last[0];
-                     var dy = pc[i+1][1]-last[1];
-                     
-                     var f = (p[0]-last[0])/dx;
-                     
-                     _x1 = (dx*(1-f))*smooth; 
-                     _y1 = (dy*(1-f))*smooth;
-                   
-                     x2 = p[0]-(dx*f)*smooth;
-                     y2 = p[1]-(dy*f)*smooth;
-                     
-                   }
-                   
-                   
-                   //path += "L"+p[0]+" "+p[1]; // straight line
-         /* bezier debugging code *
-                   view.paper.path("M"+last[0]+" "+last[1]+"L"+x1+" "+y1).attr({'stroke-dasharray':'- ',stroke:'#CCC'});
-                   view.paper.circle(x1,y1,2).attr({fill:'#0F0'});
-                   view.paper.path("M"+p[0]+" "+p[1]+"L"+x2+" "+y2).attr({'stroke-dasharray':'- ',stroke:'#CCC'});
-                   view.paper.circle(x2,y2,2).attr({fill:'#00F'});
-                   */
-                   if(opts.step){
-                     path += "L"+p[0]+" "+last[1]+"M"+p[0]+" "+p[1];
-                   }else{
-                     path += "C"
-                          +  x1+" "+y1
-                          +  " "+x2+" "+y2
-                          +  " "+p[0]+" "+p[1];
-                   }
-                }else{
-                  path += "M"+p[0]+" "+p[1];
-                }
-                
-              }
               return view.paper.path(path).attr({stroke:opts.stroke});
               
             },
@@ -598,8 +605,47 @@ var ConsynGraph = (function(){
             }
         }),
         area: new SeriesRenderer({
+            prepare: function(view,opts, context){
+              if(opts===true){
+                opts = deepcopy(this.default);
+              }else opts = extend(deepcopy(this.default), opts);
+              
+              if(!opts.smooth)opts.smooth=0;
+              if(typeof opts.fill=="undefined" && context.color){
+                opts.fill = context.color;
+              }
+              return opts;
+            },
+            render: function(view,opts,context){
+              
+
+              
+              
+              var d = context.data;
+              var path = view.toPathString(d, opts);
+              
+              var y0 = view.grapharea.y+view.grapharea.height;
+              
+              var p1 = view.toPixelCoord([d.x[0], 0]);
+              var p2 = view.toPixelCoord([d.x[d.x.length-1], 0]);
+              
+              path += "L"+p2[0]+" "+y0+"L"+p1[0]+" "+y0;
+
+                return view.paper.path(path).attr({fill:opts.fill,opacity:opts.opacity, 'stroke-width':0});
+              
+            },
+            renderLegend: function(x,y,w,h, view, opts, context){
+              var col = opts.fill;
+              var path = "M"+x+" "+y+"l"+w+" 0l0 "+~~(h/2)+"l"+(-w)+" 0";
+              return view.paper.path(path).attr({fill:col,opacity:opts.opacity,'stroke-width':0});
+              
+            },
             
+            default:{
+              smooth: 0.5, opacity: 1.0
+            }
         }),
+            
         label: new SeriesRenderer({
             
         }),
