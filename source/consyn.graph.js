@@ -65,7 +65,7 @@ var ConsynGraph = (function(){
       
       this.prepare_order = ['frame','title','background','series','legend','grid','axes'];
       
-      this.render_order = ['frame','title','background', 'grid','axes','series','legend'];
+      this.render_order = ['frame','title','background', 'grid','axes','series','legend', 'dynlabels'];
       
       
       this.viewport = {x:0,y:0, width: 200, height: 200};
@@ -113,8 +113,25 @@ var ConsynGraph = (function(){
         this.viewport = {x:x,y:y,width:w,height:h};
         this.grapharea = {x:x+gx,y:y+gy,width:w-gw,height:h-gh};
         this._objects = {};
+        this._parent_element = el;
         this.paper = Raphael(el);
         this._draw();
+      },
+      fromPixelCoord: function(pxcoords){
+        var xrange = this.viewparameters.x.range;
+        var xscale = this.grapharea.width / (xrange[1]-xrange[0]);
+        
+        var x = (pxcoords[0]-this.grapharea.x)/xscale;
+        x += this.viewparameters.x.range[0];
+
+        var yrange = this.viewparameters.y.range;
+        var yscale = this.grapharea.height / (yrange[1]-yrange[0]);
+        
+        var y = (pxcoords[1]-this.grapharea.y)/yscale;
+        y += this.viewparameters.y.range[0];
+
+        
+        return [x,y];
       },
       toPixelCoord: function(coords){
         var xrange = this.viewparameters.x.range;
@@ -282,6 +299,7 @@ var ConsynGraph = (function(){
                                         view.viewport.width,view.viewport.height
                                      )
                                      .attr(opts);
+                                     
             s.push(frame);
             return s;
           }
@@ -460,7 +478,102 @@ var ConsynGraph = (function(){
               return set;
             }
         }),
-        
+        dynlabels: new Renderer({
+          render: function(view,opts,context){
+            
+            var vp = view.grapharea;
+            
+            var y2 = vp.y + vp.height;  
+            var x2 = vp.x + vp.width;
+            
+            var rect = view.paper.rect(vp.x, 0, vp.width, view.viewport.height).attr({fill:'#000','opacity':0,'stroke-width':0});
+            
+            
+            var ruler = view.paper.rect(vp.x, vp.y, 2, vp.height).attr({fill:'#00C',opacity:0.2,'stroke-width':0});
+            
+            var xlabel = view.paper.text(vp.x,y2,"").attr({'stroke':'#00C'});
+            
+            var serielabels = [];
+            var serielabeltext = [];
+            
+            for(var i in view.series){
+                var vs = view.series[i];
+                serielabels[i] = view.paper.rect(0,0,30,12).attr({fill:'#000',opacity: 0.8});
+                serielabeltext[i]=view.paper.text(15,6,"...").attr({'font-size':10,stroke:'#FFF'})
+                 
+                serielabels[i].attr({x:vp.x,y:vp.y});
+                serielabeltext[i].attr({x:vp.x+15,y:vp.y+6});
+            }
+            
+            var _showlabels = function(x,y){
+              
+              ruler.attr({x:x});
+              
+              var coord = view.fromPixelCoord([x,y]);
+              var cx = coord[0];
+              xlabel.attr({x:x, text: (Math.round(cx*10)/10)});
+              
+              
+              for(var i in view.series){
+                var vs = view.series[i];
+                var closest = 0;
+                var closest_dist = Number.MAX_VALUE;
+                for(var ix=0; ix<vs.x.length; ix++){
+                  var d = Math.abs(vs.x[ix]-cx);
+                  if(d<closest_dist){
+                    closest_dist = d; 
+                    closest = ix; 
+                  }
+                }
+                
+                var cp = [vs.x[closest], vs.y[closest] ];
+                var labcoord = view.toPixelCoord(cp);
+                
+                serielabels[i].attr({x:labcoord[0], y:labcoord[1],text:cp[1]});
+                serielabeltext[i].attr({x:labcoord[0]+15, y:labcoord[1]+6,text:cp[1]});
+                
+              }
+              
+            };
+            
+            _showlabels(vp.width,0);
+            
+            rect.mousemove(function(e){
+             
+              var scrollY = document.documentElement.scrollTop || document.body.scrollTop,
+                scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
+              var x = e.clientX + scrollX;
+              var y = e.clientY + scrollY;
+            
+              var pe = view._parent_element;
+              console.log(pe);
+              var finger = pe;
+              var ox = 0, oy=0;
+              do{ 
+                ox += finger.offsetLeft;
+                oy += finger.offsetTop;
+                if(finger==document.body) break;
+                finger = finger.offsetParent;
+              }while(finger);
+              
+              ox+=view.viewport.x;
+              oy+=view.viewport.y;
+              
+          //    ox+=vp.x;
+          //    oy+=vp.y;
+              
+              x-=ox;
+              y-=oy;
+              
+              _showlabels(x,y);
+              
+            });
+            
+            return rect;
+            
+          }
+            
+        }),
         series: new Renderer({
             prepare: function(view,opts,context){
               // update view parameters based on series data 
