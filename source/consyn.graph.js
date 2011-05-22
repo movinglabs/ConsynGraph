@@ -586,7 +586,6 @@ var ConsynGraph = (function(){
               var y = e.clientY + scrollY;
             
               var pe = view._parent_element;
-              console.log(pe);
               var finger = pe;
               var ox = 0, oy=0;
               do{ 
@@ -632,7 +631,17 @@ var ConsynGraph = (function(){
                 _max_y = Math.max(_max_y, vs.y.max() );  
               }
               
+              if(_max_x-_min_x<0.001){
+                _min_x-=0.0001;
+                _max_x+=0.0001; 
+              }
+              
+              if(_max_y-_min_y<0.001){
+                _max_y+=0.0001; 
+              }
+              
               view.viewparameters = {x:{range: [_min_x, _max_x] }, y: {range: [_min_y, _max_y]} };
+              console.log(view.viewparameters);
               var c = 0;
               for(var i in view.series){
                 var sopt = view.options.series[i];
