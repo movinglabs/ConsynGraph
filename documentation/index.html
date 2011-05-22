@@ -38,16 +38,16 @@
      serie1:
        { 
          x: [5, 20 , 30, 50, 70],
-         y: [15, 35, 65, 75, 76]
+         y: [15, 46, 65, 75, 76]
        },
      serie2:
        {x: [10, 20 , 25, 54, 80],
-         y: [52, 62, 40, 25, 63]
+         y: [52, 42, 40, 25, 63]
          },
          
      serie3:
        {x: [10, 20 , 25, 54, 80],
-         y: [150, 115, 140, 115, 163]
+         y: [150, 50, 140, 115, 163]
          }
     }, 
     { // options
@@ -81,7 +81,6 @@
              line: {smooth: 0},
              markers: false,
              area: {
-               color: '#CCF',
                opacity: 0.5,
                smooth: 0
              }
@@ -89,7 +88,10 @@
            serie3: {
              label: "Serie 3",
              line: {step: true},
-             markers: true
+             markers: true,
+             area: {
+               opacity: 0.4, step:"continuous"
+             }
            }
          
          }
@@ -283,6 +285,67 @@
    <script type="text/javascript">
      $("#scripttscode").html($("#scriptts").html());
    </script>
+   
+   
+   
+   <h2>Exception Test Cases</h2>
+   <strong>Empty Graph</strong>
+   
+   <div style="height: 200px; width: 600px;" id="empty"></div>
+   
+   
+   <script type="text/javascript" id="scriptempty">
+   
+   var view = new ConsynGraph.View(
+     { // data series
+     serie1:
+       { 
+         x: [1,2],
+         y: [0,0]
+       }
+    }, 
+    { // options
+         title: "Empty Graph",
+         frame: {fill:'#EEF'},
+         axes: {
+           west: {from_zero:true, name:"Value"}, 
+           south: {
+             name: "Blaat (x10)",
+             label: function(v){
+               return ~~(v)/10; // label formatting function
+             }
+           }
+         },
+         grid: {
+           x: false,
+           y: {step: 10, start: 0 }
+         },
+         legend: {
+          type: 'box', 
+          position: {top: 10, right: 10}
+         },
+         series: {
+           serie1: {
+             label: "Serie 1 Line", 
+             markers: {symbol: "o", size: 3,attr:{fill:true}},
+             line: true
+           }
+        
+         }
+       }
+     ).draw(document.getElementById('empty'));
+   
+   </script>
+   
+   <pre><code id="scriptemptycode">
+   ... code sample loaded dynamically using JavaScript ...
+   </code></pre>
+   <script type="text/javascript">
+     $("#scriptemptycode").html($("#scriptempty").html());
+   </script>
+  
+   
+   
    
   </div>
   
