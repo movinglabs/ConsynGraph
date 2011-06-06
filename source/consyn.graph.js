@@ -641,7 +641,7 @@ var ConsynGraph = (function(){
                 vs.y_real = [];
                 for(var ix=0; ix<vs.y.length; ix++){
                   var off = 0;
-                  if(vs.y_offset){
+                  if(vs.y_offset!==null && typeof vs.y_offset!="undefined"){
                     var x = vs.x[ix];
                     // find neighbour x values
                     for(var jx=0; jx<vs.y_offset.length; jx++){
