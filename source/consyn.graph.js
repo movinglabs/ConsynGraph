@@ -450,7 +450,7 @@ var ConsynGraph = (function(){
             render: function(view,opts,context){
               var keys = [];
 
-              if(typeof opts.select!="undefined"){
+              if(typeof opts!="undefined" && typeof opts.select!="undefined"){
                 keys = opts.select;
               }else{
                
