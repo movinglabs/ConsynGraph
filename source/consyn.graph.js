@@ -155,8 +155,8 @@ var ConsynGraph = (function(){
         var s = ""+n;
         if(s.length > size){
           var off = s.indexOf(".");
-          if(off<size){
-          //  s = s.substring(0,size); 
+          if(off<size && off>=0){
+            s = s.substring(0,size); 
           }else{
             s = s.substring(0,off); 
           }
