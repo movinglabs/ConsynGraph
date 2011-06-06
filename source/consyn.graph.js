@@ -511,13 +511,14 @@ var ConsynGraph = (function(){
             var serielabels ={};
             var serielabeltext = {};
             var LAB_WIDTH=30, LAB_HEIGHT=12;
-            
+            var c=0;
             for(var i in view.series){
                 var vs = view.series[i];
                 serielabels[i] = view.paper.rect(0,0,LAB_WIDTH,LAB_HEIGHT).attr({fill:'#000',opacity: 0.8});                serielabeltext[i]=view.paper.text(0,0,"").attr({'font-size':10,stroke:'#FFF'})
                  
-                serielabels[i].attr({x:vp.x,y:vp.y});
+                serielabels[i].attr({x:vp.x,y:vp.y,'stroke-width':1,'stroke':view.colors[c%view.colors.length]});
                 serielabeltext[i].attr({x:vp.x+15,y:vp.y+6});
+                c++;
             }
             
             var _showlabels = function(x,y){
@@ -554,15 +555,22 @@ var ConsynGraph = (function(){
                 var cp = cps[ix];
                 var i = cp[2];
                 var ylab = cp[3];
+                ylab = view.formatNumber(ylab,5);
                 var labcoord = view.toPixelCoord(cp);
                 
                 var x =labcoord[0];
                 var y =labcoord[1];
+                var w = LAB_WIDTH;
                 
-                if(  (x+LAB_WIDTH  > lastx && x < lastx+LAB_WIDTH)
+                serielabeltext[i].attr({text:ylab});
+                w = serielabeltext[i].getBBox().width;
+                w+=6;
+
+                
+                if(  (x+w  > lastx && x < lastx+w)
                   && (y+LAB_HEIGHT > lasty && y < lasty+LAB_HEIGHT)){ // actual overlap
                   if(x<=lastx){ // flip the label to the left
-                    x-=LAB_WIDTH;
+                    x-=w;
                   }else{ 
                     y-=LAB_HEIGHT;
                   }
@@ -572,8 +580,10 @@ var ConsynGraph = (function(){
                 lastx = x;
                 lasty = y;
                 
-                serielabels[i].attr({x:x, y:y,text:ylab});
-                serielabeltext[i].attr({x:x+(LAB_WIDTH/2), y:y+(LAB_HEIGHT/2),text: view.formatNumber(ylab,5)});
+                
+                
+                serielabels[i].attr({x:x, y:y, width:w});
+                serielabeltext[i].attr({x:x+(w/2), y:y+(LAB_HEIGHT/2),text: ylab});
                 
               }
               
