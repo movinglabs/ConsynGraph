@@ -643,13 +643,17 @@ var ConsynGraph = (function(){
                   var off = 0;
                   if(vs.y_offset!==null && typeof vs.y_offset!="undefined"){
                     var x = vs.x[ix];
+                    var closest = Number.MAX_VALUE;
                     // find neighbour x values
-                    for(var jx=0; jx<vs.y_offset.length; jx++){
-                      
-                      if(vs.x_offset[jx]>=x) break;
+                    for(var jx=0; jx<vs.x_offset.length; jx++){
+                      var d = Math.abs(vs.x_offset[jx]-x);
+                      if(d<closest) closest=d;
+                      else if(d>closest) break;
+  //                      if(vs.x_offset[jx]>=x) break;
                     }
-                    if(jx>=vs.y_offset.length)jx=vs.y_offset.length-1;
-                    off=vs.y_offset[jx];
+                    if(jx>=vs.y_offset.length)jx=vs.y_offset.length;
+                    if(jx==0)jx++; // just to be shure
+                    off=vs.y_offset[jx-1];
                     
                   }
                   vs.y_real[ix] = off+vs.y[ix];
