@@ -646,7 +646,7 @@ var ConsynGraph = (function(){
                     // find neighbour x values
                     for(var jx=0; jx<vs.y_offset.length; jx++){
                       
-                      if(vs.x_offset[jx]>x) break;
+                      if(vs.x_offset[jx]>=x) break;
                     }
                     if(jx>=vs.y_offset.length)jx=vs.y_offset.length-1;
                     off=vs.y_offset[jx];
