@@ -448,10 +448,23 @@ var ConsynGraph = (function(){
               view.grapharea.width-=150;
             },
             render: function(view,opts,context){
-              var num_series = 0;
+              var keys = [];
+
+              if(typeof opts.select!="undefined"){
+                keys = opts.select;
+              }else{
+               
+                for(var i in view.series){
+                  keys.push(i);
+                } 
+              }
               
+              var num_series = keys.length;
+              
+              var mappedcolor = {}, c=0;
               for(var i in view.series){
-                num_series++; 
+                mappedcolor[i] = view.colors[c%view.colors.length];
+               c++
               }
               
               var set = view.paper.set();
@@ -468,8 +481,9 @@ var ConsynGraph = (function(){
                 var xt = x+2;
                 var yt = y+10;
                 var ta, lab, sopts,col;
-                var c=0;
-                for(var i in view.series){
+                
+                for(var ki=0; ki<keys.length; ki++){
+                  var i = keys[ki];
                   lab = ""+i;
                   sopts = view.options.series[i];
                   if(typeof sopts != "undefined"){
@@ -477,7 +491,7 @@ var ConsynGraph = (function(){
                       if(typeof _graph.renderers[k] !="undefined"){
                         if(sopts[k]===false) continue;
                         set.push(
-                          _graph.renderers[k].renderLegend(xt,yt,20,20, view,sopts[k], {color: view.colors[c%view.colors.length]})
+                          _graph.renderers[k].renderLegend(xt,yt,20,20, view,sopts[k], {color: mappedcolor[i]})
                           );
                       }
                     }
