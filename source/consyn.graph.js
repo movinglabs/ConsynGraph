@@ -63,7 +63,7 @@ var ConsynGraph = (function(){
       
       this.colors = colors;
       
-      this.prepare_order = ['frame','title','background','series','legend','grid','axes'];
+      this.prepare_order = ['frame','title','background','stack','series','legend','grid','axes'];
       
       this.render_order = ['frame','title','background', 'grid','axes','series','legend', 'dynlabels'];
       
@@ -163,17 +163,19 @@ var ConsynGraph = (function(){
         }
         return s;
       },
-      toPathString: function(d, opts){
+      toPathString: function(d, opts,reverse){
         smooth=opts.smooth/2;
 
         
+        
         var path="";
         var pc = [];
-        for(var i=0; i<d.y.length; i++){
-          var y = d.y[i],
-              x = d.x[i];
-              
-          pc[i] = this.toPixelCoord([x,y]);
+        var reverse = typeof reverse != "undefined" && reverse;
+        for(var i=0; i<d.y_real.length; i++){
+          var y = d.y_real[i], x = d.x[i];
+          
+          ix = i; if(reverse) ix = d.y_real.length-i-1;
+          pc[ix] = this.toPixelCoord([x,y]);
           
         }
         var p,last,_x1,_y1;
@@ -540,7 +542,7 @@ var ConsynGraph = (function(){
                   }
                 }
                 
-                cps[cps.length] = [vs.x[closest], vs.y[closest], i ];
+                cps[cps.length] = [vs.x[closest], vs.y_real[closest], i, vs.y[closest] ];
               }
               
               cps.sort(function(a,b){
@@ -551,6 +553,7 @@ var ConsynGraph = (function(){
               for(var ix=0; ix<cps.length;ix++){
                 var cp = cps[ix];
                 var i = cp[2];
+                var ylab = cp[3];
                 var labcoord = view.toPixelCoord(cp);
                 
                 var x =labcoord[0];
@@ -569,8 +572,8 @@ var ConsynGraph = (function(){
                 lastx = x;
                 lasty = y;
                 
-                serielabels[i].attr({x:x, y:y,text:cp[1]});
-                serielabeltext[i].attr({x:x+(LAB_WIDTH/2), y:y+(LAB_HEIGHT/2),text: view.formatNumber(cp[1],5)});
+                serielabels[i].attr({x:x, y:y,text:ylab});
+                serielabeltext[i].attr({x:x+(LAB_WIDTH/2), y:y+(LAB_HEIGHT/2),text: view.formatNumber(ylab,5)});
                 
               }
               
@@ -613,6 +616,53 @@ var ConsynGraph = (function(){
           }
             
         }),
+        stack: new Renderer({
+            prepare: function(view,opts,context){
+              // set y_offset and y_real  to build a stacked graph 
+              if(!opts) return false;
+              var vs;
+              
+              if(opts==true){
+                console.log("yeah");
+                opts = [];
+                for(var i in view.series){
+                  opts.push(i);
+                }
+                console.log(opts);
+              }
+              
+              var last_y_offset=null;
+              var last_x_offset=null;
+              for(var k=0; k<opts.length; k++){
+                var i = opts[k];
+                vs = view.series[i];
+                vs.y_offset = last_y_offset;
+                vs.x_offset = last_x_offset;
+                vs.y_real = [];
+                for(var ix=0; ix<vs.y.length; ix++){
+                  var off = 0;
+                  if(vs.y_offset){
+                    var x = vs.x[ix];
+                    // find neighbour x values
+                    for(var jx=0; jx<vs.y_offset.length; jx++){
+                      
+                      if(vs.x_offset[jx]>x) break;
+                    }
+                    if(jx>=vs.y_offset.length)jx=vs.y_offset.length-1;
+                    off=vs.y_offset[jx];
+                    
+                  }
+                  vs.y_real[ix] = off+vs.y[ix];
+                }
+                last_y_offset = vs.y_real;
+                last_x_offset = vs.x;
+                
+              }
+              
+            }
+            
+            
+        }),
         series: new Renderer({
             prepare: function(view,opts,context){
               // update view parameters based on series data 
@@ -624,11 +674,15 @@ var ConsynGraph = (function(){
               var vs;
               for(var i in view.series){
                 vs = view.series[i];
-                
+                if(typeof vs.y_real == "undefined"){
+                  view.series[i].y_real = vs.y;
+                  vs = view.series[i];
+                }
                 _min_x = Math.min(_min_x, vs.x.min() );  
                 _max_x = Math.max(_max_x, vs.x.max() );  
-                _min_y = Math.min(_min_y, vs.y.min() );  
-                _max_y = Math.max(_max_y, vs.y.max() );  
+                _min_y = Math.min(_min_y, vs.y_real.min() );  
+                _max_y = Math.max(_max_y, vs.y_real.max() );  
+                
               }
               
               if(_max_x-_min_x<0.001){
@@ -681,7 +735,7 @@ var ConsynGraph = (function(){
               
               var d = context.data;
               for(var i=0; i<d.y.length; i++){
-                var y = d.y[i],
+                var y = d.y_real[i],
                     x = d.x[i];
                     
                 var p = view.toPixelCoord([x,y]);
@@ -788,12 +842,20 @@ var ConsynGraph = (function(){
               
               var y0 = view.grapharea.y+view.grapharea.height;
               
-              var p1 = view.toPixelCoord([d.x[0], 0]);
-              var p2 = view.toPixelCoord([d.x[d.x.length-1], 0]);
               
-              path += "L"+p2[0]+" "+y0+"L"+p1[0]+" "+y0;
-
-                return view.paper.path(path).attr({fill:opts.fill,opacity:opts.opacity, 'stroke-width':0});
+              if(d.y_offset){
+                var doffset={x: d.x_offset, y: d.y_offset,y_real: d.y_offset};
+                var p1 = view.toPixelCoord([d.x[0], d.y_real[0]]);
+                var p2 = view.toPixelCoord([d.x_offset[d.x_offset.length-1], d.y_offset[d.y_offset.length-1]]);
+                path += "L"+p2[0]+" "+p2[1];
+                path += view.toPathString(doffset, opts, true);
+                path += "L"+p1[0]+" "+p1[1];
+              }else{
+                var p1 = view.toPixelCoord([d.x[0], 0]);
+                var p2 = view.toPixelCoord([d.x[d.x.length-1], 0]);
+                path += "L"+p2[0]+" "+y0+"L"+p1[0]+" "+y0;
+              }
+              return view.paper.path(path).attr({fill:opts.fill,opacity:opts.opacity, 'stroke-width':0});
               
             },
             renderLegend: function(x,y,w,h, view, opts, context){

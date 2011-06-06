@@ -160,7 +160,96 @@
    
    
    
+   
+   
+   
    <h3>Scatter Values</h3>
+   
+   
+   
+      <h2>Stacked Graph</h2>
+   
+   <div style="height: 200px; width: 600px;" id="stack1"></div>
+   
+   
+   <script type="text/javascript" id="stackscript1">
+   
+   var view = new ConsynGraph.View(
+     { // data series
+     serie1:
+       { 
+         x: [5, 20 , 30, 50, 70],
+         y: [15, 46, 65, 75, 76]
+       },
+     serie2:
+       {x: [10, 20 , 25, 54, 80],
+         y: [52, 42, 40, 25, 63]
+         },
+         
+     serie3:
+       {x: [10, 20 , 25, 54, 80],
+         y: [150, 50, 140, 115, 163]
+         }
+    }, 
+    { // options
+         title: "Stacked Graph",
+         frame: {fill:'#EEF'},
+         axes: {
+           west: {from_zero:true, name:"Value"}, 
+           south: {
+             name: "Blaat (x10)",
+             label: function(v){
+               return ~~(v)/10; // label formatting function
+             }
+           }
+         },
+         grid: {
+           x: false,
+           y: {step: 10, start: 0 }
+         },
+         legend: {
+          type: 'box', 
+          position: {top: 10, right: 10}
+         },
+         stack:true, //["serie2","serie3"],
+         series: {
+           serie1: {
+             label: "Serie 1 Line", 
+             markers: {symbol: "o", size: 3,attr:{fill:true}},
+             line: true
+           },
+           serie2: {
+             label: "Serie 2 Area",
+             line: {smooth: 0},
+             markers: false,
+             area: {
+               opacity: 0.5,
+               smooth: 0
+             }
+           },
+           serie3: {
+             label: "Serie 3",
+             line: {smooth:0},
+             markers: true,
+             area: {
+               opacity: 0.4,
+               smooth:0
+             }
+           }
+         
+         }
+       }
+     ).draw(document.getElementById('stack1'));
+   
+   </script>
+   
+   <pre><code id="stack1code">
+   ... code sample loaded dynamically using JavaScript ...
+   </code></pre>
+   <script type="text/javascript">
+     $("#stack1code").html($("#stackscript1").html());
+   </script>
+   
    
    
    <h2>View Options</h2>
