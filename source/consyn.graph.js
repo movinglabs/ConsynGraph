@@ -62,8 +62,9 @@ var ConsynGraph = (function(){
       this._objects = null;
       
       this.colors = colors;
+      this.mappedcolor={};
       
-      this.prepare_order = ['frame','title','background','stack','series','legend','grid','axes'];
+      this.prepare_order = ['color', 'frame','title','background','stack','series','legend','grid','axes'];
       
       this.render_order = ['frame','title','background', 'grid','axes','series','legend', 'dynlabels'];
       
@@ -306,6 +307,21 @@ var ConsynGraph = (function(){
       Renderer: Renderer,
       
       renderers:{
+        
+        color: new Renderer({
+            prepare:function(view,opts, context){
+              if(typeof opts!="undefined"&& opts.mapping){
+                view.mappedcolor=opts.mapping; 
+              }else{
+                 var mappedcolor = {}, c=0;
+                  for(var i in view.series){
+                    mappedcolor[i] = view.colors[c%view.colors.length];
+                   c++
+                  }
+                  view.mappedcolor=mappedcolor;
+              }
+            }
+        }),
         frame: new Renderer({
           render: function(view,opts,context){
             opts = extend({fill:'#EEE',stroke:'#DDD'},opts); 
@@ -461,11 +477,7 @@ var ConsynGraph = (function(){
               
               var num_series = keys.length;
               
-              var mappedcolor = {}, c=0;
-              for(var i in view.series){
-                mappedcolor[i] = view.colors[c%view.colors.length];
-               c++
-              }
+              
               
               var set = view.paper.set();
               if(num_series>0){
@@ -491,7 +503,7 @@ var ConsynGraph = (function(){
                       if(typeof _graph.renderers[k] !="undefined"){
                         if(sopts[k]===false) continue;
                         set.push(
-                          _graph.renderers[k].renderLegend(xt,yt,20,20, view,sopts[k], {color: mappedcolor[i]})
+                          _graph.renderers[k].renderLegend(xt,yt,20,20, view,sopts[k], {color: view.mappedcolor[i]})
                           );
                       }
                     }
@@ -502,8 +514,7 @@ var ConsynGraph = (function(){
                   }
                   ta = view.paper.text(xt+22, yt, lab).attr({color:'#000','text-anchor':'start','font-size':10});
                   set.push(ta);
-                  yt+=dy;
-                  c++;                  
+                  yt+=dy;              
                 }
               }
               return set;
@@ -532,7 +543,7 @@ var ConsynGraph = (function(){
                 var vs = view.series[i];
                 serielabels[i] = view.paper.rect(0,0,LAB_WIDTH,LAB_HEIGHT).attr({fill:'#000',opacity: 0.8});                serielabeltext[i]=view.paper.text(0,0,"").attr({'font-size':10,stroke:'#FFF'})
                  
-                serielabels[i].attr({x:vp.x,y:vp.y,'stroke-width':1,'stroke':view.colors[c%view.colors.length]});
+                serielabels[i].attr({x:vp.x,y:vp.y,'stroke-width':1,'stroke':view.mappedcolor[i]});
                 serielabeltext[i].attr({x:vp.x+15,y:vp.y+6});
                 c++;
             }
@@ -731,7 +742,7 @@ var ConsynGraph = (function(){
                 var sopt = view.options.series[i];
                 for(var j in sopt){
                   if(sopt[j]===false) continue;
-                  ret = _graph.renderers[j].prepare(view, sopt[j], {data:view.series[i], color: view.colors[c%view.colors.length]} );
+                  ret = _graph.renderers[j].prepare(view, sopt[j], {data:view.series[i], color: view.mappedcolor[i]} );
                   if(typeof ret == "object") sopt[j] = ret; 
                 }
                 c++;
@@ -744,7 +755,7 @@ var ConsynGraph = (function(){
                 var sopt = view.options.series[i];
                 for(var j in sopt){
                   if(sopt[j]===false) continue;
-                  s.push( _graph.renderers[j].render(view, sopt[j], {data:view.series[i], color: view.colors[c%view.colors.length]} ) );
+                  s.push( _graph.renderers[j].render(view, sopt[j], {data:view.series[i], color: view.mappedcolor[i]} ) );
                 }
                 c++;
               }
