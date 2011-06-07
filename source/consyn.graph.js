@@ -624,7 +624,7 @@ var ConsynGraph = (function(){
                 var tl = 5;
                 //var dir = -1;
                 
-                serielabels[i].attr({path:"M"+x+" "+y+"l"+(dir*tl)+" -"+oh+"l"+(dir*w)+" 0l0 "+LAB_HEIGHT+"l"+(-w*dir)+" 0l"+(-tl*dir)+" -"+(LAB_HEIGHT-oh)});
+                serielabels[i].attr({path:"M"+x+" "+y+"l"+(dir*tl)+" "+(-oh)+"l"+(dir*w)+" 0l0 "+LAB_HEIGHT+"l"+(-w*dir)+" 0l"+(-tl*dir)+" -"+(LAB_HEIGHT-oh)});
                 serielabeltext[i].attr({x:x+dir*(5+(w/2)), y:y+(LAB_HEIGHT/2)-oh,text: ylab});
                 
               }
