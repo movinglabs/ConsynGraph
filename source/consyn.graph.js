@@ -535,13 +535,15 @@ var ConsynGraph = (function(){
             
             //var xlabel = view.paper.text(vp.x,y2,"").attr({'stroke':'#00C'});
             
+            
+            
             var serielabels ={};
             var serielabeltext = {};
             var LAB_WIDTH=30, LAB_HEIGHT=12;
             var c=0;
             for(var i in view.series){
                 var vs = view.series[i];
-                serielabels[i] = view.paper.rect(0,0,LAB_WIDTH,LAB_HEIGHT).attr({fill:'#000',opacity: 0.8});                serielabeltext[i]=view.paper.text(0,0,"").attr({'font-size':10,stroke:'#FFF'})
+                serielabels[i] = view.paper.path("M0 0").attr({fill:'#000',opacity: 0.7});                serielabeltext[i]=view.paper.text(0,0,"").attr({'font-size':10,stroke:'#FFF'})
                  
                 serielabels[i].attr({x:vp.x,y:vp.y,'stroke-width':1,'stroke':view.mappedcolor[i]});
                 serielabeltext[i].attr({x:vp.x+15,y:vp.y+6});
@@ -577,7 +579,8 @@ var ConsynGraph = (function(){
                   return b[1]-a[1]; 
               });
               
-              var lastx = 0, lasty=0;
+              var lasty={1:0};
+              lasty[-1]=0;
               for(var ix=0; ix<cps.length;ix++){
                 var cp = cps[ix];
                 var i = cp[2];
@@ -593,24 +596,36 @@ var ConsynGraph = (function(){
                 w = serielabeltext[i].getBBox().width;
                 w+=6;
 
+                var dir = 1;
+                var oh = ~~(LAB_HEIGHT*(cps.length-ix)/(cps.length));
                 
-                if(  (x+w  > lastx && x < lastx+w)
-                  && (y+LAB_HEIGHT > lasty && y < lasty+LAB_HEIGHT)){ // actual overlap
-                  if(x<=lastx){ // flip the label to the left
+                if(  /*(x+w  > lastx && x < lastx+w)
+                  &&*/
+                (y <= lasty[dir])){ // actual overlap, that requires flipping
+                
+                  dir = -1;
+ /*                 if(x<=lastx){ // flip the label to the left
                     x-=w;
                   }else{ 
                     y-=LAB_HEIGHT;
                   }
-                  
+   */               
+                }
+                if( lasty[dir] >= y-oh){
+                  oh = y-lasty[dir]-1;
                 }
                 
-                lastx = x;
-                lasty = y;
+                
+                 //LAB_HEIGHT/2;
+
+                lasty[dir] = y+LAB_HEIGHT-oh;
                 
                 
+                var tl = 5;
+                //var dir = -1;
                 
-                serielabels[i].attr({x:x, y:y, width:w});
-                serielabeltext[i].attr({x:x+(w/2), y:y+(LAB_HEIGHT/2),text: ylab});
+                serielabels[i].attr({path:"M"+x+" "+y+"l"+(dir*tl)+" -"+oh+"l"+(dir*w)+" 0l0 "+LAB_HEIGHT+"l"+(-w*dir)+" 0l"+(-tl*dir)+" -"+(LAB_HEIGHT-oh)});
+                serielabeltext[i].attr({x:x+dir*(5+(w/2)), y:y+(LAB_HEIGHT/2)-oh,text: ylab});
                 
               }
               
