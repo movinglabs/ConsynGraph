@@ -11,12 +11,11 @@ A JavaScript Graphing Library based on Raphael.
  
 Supported Graph Types
 ---------------------
- * None implemented so far
+ * Line/Area
+ * Stacked Area/Line
  
 Planned Graph Types
 
- * Line/Area
- * Stacked Area/Line
  * Range (not sure how to name it)
  * Scatter
  * Bar
