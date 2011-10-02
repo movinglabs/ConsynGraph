@@ -688,6 +688,9 @@ var ConsynGraph = (function(){
               for(var k=0; k<opts.length; k++){
                 var i = opts[k];
                 vs = view.series[i];
+                
+                if(!vs) continue; // if there is no data, skip this one
+                
                 vs.y_offset = last_y_offset;
                 vs.x_offset = last_x_offset;
                 vs.y_real = [];
