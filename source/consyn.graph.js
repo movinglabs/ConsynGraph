@@ -28,7 +28,7 @@ var ConsynGraph = (function(){
     }
     
     var extend = function(a,b){
-      if(typeof b=="undefined") return;
+      if(typeof b=="undefined") return a;
       for(var i in b){
         a[i] = b[i]; 
       }
@@ -264,12 +264,17 @@ var ConsynGraph = (function(){
         this.series = extend(this.series, s);
         
         for(var i in this.series){
+          if(typeof this.series[i].x == "undefined" &&
+            typeof this.series[i].y == "undefined"){
+            // expecting plain array of data, wrapping appropriately
+            this.series[i] = {y:this.series[i]};
+          }
           if(typeof this.series[i].x == "undefined"
             && typeof this.series[i].y != "undefined"){
             // auto-generate x-values if only y-values are defined
             var x = [];
-            for(var i=0; i<context.data.y.length; i++){
-              x[j] = j+1;   
+            for(var ix=0; ix<this.series[i].y.length; ix++){
+              x[ix] = ix+1;   
             }
             this.series[i].x = x;
           }
@@ -278,6 +283,14 @@ var ConsynGraph = (function(){
       },
       updateOptions: function(opts){
         this.options = extend(this.options, opts);
+        
+        if(typeof this.options.series=="undefined"){
+          this.options.series = {};
+          for(var i in this.series){
+            this.options.series[i] = default_series_opts;
+          }
+        }
+        
       }
     };
     
@@ -340,6 +353,7 @@ var ConsynGraph = (function(){
         
         axes: new Renderer({
           prepare: function(view,opts,context){
+            opts = extend( deepcopy(this.defaultOptions) , opts);
 
             if(typeof opts.south =="object"){
               if(opts.south.from_zero) view.viewparameters.x.range[0] = Math.min(0,view.viewparameters.x.range[0]);
@@ -354,6 +368,7 @@ var ConsynGraph = (function(){
             }
           },
           render: function(view,opts,context){
+            opts = extend(deepcopy(this.defaultOptions), opts);
             
             var vp = view.grapharea;
             var s = view.paper.set();
@@ -435,7 +450,8 @@ var ConsynGraph = (function(){
                return ~~(v*100)/100;
             }
             return v; 
-          }
+          },
+          defaultOptions: {south:false,west:false}
         }),
         background: new Renderer({
             render: function(view,opts,context){
@@ -675,12 +691,10 @@ var ConsynGraph = (function(){
               var vs;
               
               if(opts==true){
-                console.log("yeah");
                 opts = [];
                 for(var i in view.series){
                   opts.push(i);
                 }
-                console.log(opts);
               }
               
               var last_y_offset=null;
@@ -754,10 +768,13 @@ var ConsynGraph = (function(){
               }
               
               view.viewparameters = {x:{range: [_min_x, _max_x] }, y: {range: [_min_y, _max_y]} };
-              console.log(view.viewparameters);
               var c = 0;
               for(var i in view.series){
-                var sopt = view.options.series[i];
+                var sopt = {};
+                if(typeof view.options.series != "undefined"
+                  && typeof view.options.series[i] != "undefined"){
+                  sopt =  view.options.series[i];
+                }
                 for(var j in sopt){
                   if(sopt[j]===false) continue;
                   ret = _graph.renderers[j].prepare(view, sopt[j], {data:view.series[i], color: view.mappedcolor[i]} );

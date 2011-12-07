@@ -310,15 +310,21 @@
    <p>Examples of on-the-fly data loading.</p>
    <div style="height: 200px; width: 600px;" id="dynamicview"></div>
    <p><a href="#" onclick="dynamic_example_1(); return false;">Update Graph</a></p>
-   <pre><code>
+   
+   <script type="text/javascript" id="dynamicviewscript">
    
    var a = new ConsynGraph.View({serie1:[525,521, 563]});
-   a.draw("dynamicview");
+   a.draw(document.getElementById("dynamicview"));
    
    function dynamic_example_1(){
      a.updateData({serie1: [523, 523, 256]});
    }
-   </pre></code>
+   </script>
+   <pre><code id="dynamicviewcode">... sample code dynamically loaded ...
+   </code></pre>
+   <script type="text/javascript">
+     $("#dynamicviewcode").html($("#dynamicviewscript").html());
+   </script>
    
    
    <h3>Scrolling</h3>
