@@ -49,16 +49,15 @@ var ConsynGraph = (function(){
     }
     
     var default_series_opts = {
-      label:"",
       line: false,
-      markers: true
+      markers: true,
       };
     
     var view_func = function ConsynGraph_View(series, opts){
       this.series = {};
       this.options = {gutter: [10,20,10,20] };
-      this.updateOptions(opts);
       this.updateData(series);
+      this.updateOptions(opts);
       this._objects = null;
       
       this.colors = colors;
@@ -286,8 +285,10 @@ var ConsynGraph = (function(){
         
         if(typeof this.options.series=="undefined"){
           this.options.series = {};
-          for(var i in this.series){
-            this.options.series[i] = default_series_opts;
+        }
+        for(var i in this.series){
+          if(typeof this.options.series[i] == "undefined"){
+            this.options.series[i] = deepcopy(default_series_opts);
           }
         }
         
@@ -775,6 +776,7 @@ var ConsynGraph = (function(){
                   && typeof view.options.series[i] != "undefined"){
                   sopt =  view.options.series[i];
                 }
+
                 for(var j in sopt){
                   if(sopt[j]===false) continue;
                   ret = _graph.renderers[j].prepare(view, sopt[j], {data:view.series[i], color: view.mappedcolor[i]} );
@@ -806,8 +808,6 @@ var ConsynGraph = (function(){
             render: function(view,opts,context){
               var s = view.paper.set();
               opts = this.fixOpts(opts);
-              
-//              alert(view.toPixelCoord([10,50]) );
               
               var d = context.data;
               for(var i=0; i<d.y.length; i++){
