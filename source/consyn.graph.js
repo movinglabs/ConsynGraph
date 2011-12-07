@@ -56,8 +56,8 @@ var ConsynGraph = (function(){
     var view_func = function ConsynGraph_View(series, opts){
       this.series = {};
       this.options = {gutter: [10,20,10,20] };
-      this.updateData(series);
       this.updateOptions(opts);
+      this.updateData(series);
       this._objects = null;
       
       this.colors = colors;
@@ -105,13 +105,8 @@ var ConsynGraph = (function(){
         if(typeof w == "undefined") w=el.offsetWidth-x;
         if(typeof h == "undefined") h=el.offsetHeight-y;
         
-        var gx = this.options.gutter[3],
-            gy = this.options.gutter[0],
-            gw = gx+this.options.gutter[1],
-            gh = gy+this.options.gutter[2];
-        
         this.viewport = {x:x,y:y,width:w,height:h};
-        this.grapharea = {x:x+gx,y:y+gy,width:w-gw,height:h-gh};
+
         this._objects = {};
         this._parent_element = el;
         this.paper = Raphael(el);
@@ -233,6 +228,14 @@ var ConsynGraph = (function(){
       },
 
       _draw: function(){
+        var gx = this.options.gutter[3],
+          gy = this.options.gutter[0],
+          gw = gx+this.options.gutter[1],
+          gh = gy+this.options.gutter[2];
+        this.grapharea = {x:this.viewport.x+gx,y:this.viewport.y+gy,width:this.viewport.width-gw,height:this.viewport.height-gh};
+
+        
+        
         var paper = this.paper;
         
         var k, ret;
@@ -256,33 +259,82 @@ var ConsynGraph = (function(){
         this.paper.clear(); // TODO: check if this is correct
         this._draw();
       },
+      /** Replace all series data by the new one */
       setData: function(s){
+        s = this._fixDataSeries(s);
         this.series = s;
-      },
-      updateData: function(s){
-        this.series = extend(this.series, s);
         
-        for(var i in this.series){
-          if(typeof this.series[i].x == "undefined" &&
-            typeof this.series[i].y == "undefined"){
-            // expecting plain array of data, wrapping appropriately
-            this.series[i] = {y:this.series[i]};
-          }
-          if(typeof this.series[i].x == "undefined"
-            && typeof this.series[i].y != "undefined"){
-            // auto-generate x-values if only y-values are defined
-            var x = [];
-            for(var ix=0; ix<this.series[i].y.length; ix++){
-              x[ix] = ix+1;   
+        this._fixDefaultSeriesOptions();
+      },
+      /** Replace specified series,  if a graph is currently displayed and undefined in the new set,  the old one will be displayed.
+      
+      Typical use would be to add a series to an existing graph or replacing data on a specific series.
+      */
+      updateData: function(s){
+        s = extend(this.series, s);
+        this.setData(s);
+      },
+      /** Add datapoints to the specified series, without removing the existing ones */
+      appendData: function(s){
+        
+        for(var i in s){
+          
+          if(typeof this.series[i]=="undefined"){
+            this.series[i] = s[i];  // just copy 
+          }else{  // try to merge the dataset
+            
+            // fix the data if needed
+            if(typeof s[i].x == "undefined"){
+              if(typeof s[i].y == "undefined"){
+                s[i] = {y:s[i]};
+              }
+              var x = [];
+              var oldx = this.series[i].x;
+              var lastx = oldx[ oldx.length -1 ];
+              for(var ix= 0 ; ix<s[i].y.length; ix++){
+                x[ix] = lastx+ix+1;   
+              }
+              s[i].x = x;              
             }
-            this.series[i].x = x;
+
+            // append x and y values to existing arrays
+            for(var ix in s[i].x){
+              if(typeof s[i].x[ix] == "function") continue;
+              this.series[i].x.push( s[i].x[ix] ); 
+            }
+            for(var ix in s[i].y){
+              if(typeof s[i].y[ix] == "function") continue;
+              this.series[i].y.push( s[i].y[ix] ); 
+            }
           }
         }
         
+      this.setData(this.series); // call for the sideeffects
+        
       },
+      _fixDataSeries: function(series){
+        for(var i in series){
+          if(typeof series[i].x == "undefined"){
+            if( typeof series[i].y == "undefined"){
+              // expecting plain array of data, wrapping appropriately
+              series[i] = {y:series[i]};
+            }
+            
+            // auto-generate x-values if only y-values are defined
+            var x = [];
+            for(var ix=0; ix<series[i].y.length; ix++){
+              x[ix] = ix+1;   
+            }
+            series[i].x = x;
+          }
+        }
+        return series;
+      },
+      
       updateOptions: function(opts){
         this.options = extend(this.options, opts);
-        
+      },
+      _fixDefaultSeriesOptions: function(){
         if(typeof this.options.series=="undefined"){
           this.options.series = {};
         }
@@ -290,8 +342,7 @@ var ConsynGraph = (function(){
           if(typeof this.options.series[i] == "undefined"){
             this.options.series[i] = deepcopy(default_series_opts);
           }
-        }
-        
+        } 
       }
     };
     

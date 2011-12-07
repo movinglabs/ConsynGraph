@@ -317,7 +317,8 @@
    a.draw(document.getElementById("dynamicview"));
    
    function dynamic_example_1(){
-     a.updateData({serie1: [523, 523, 256]});
+     a.appendData({serie1: [523, 523, 256]});
+     a.redraw();
    }
    </script>
    <pre><code id="dynamicviewcode">... sample code dynamically loaded ...
