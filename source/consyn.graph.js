@@ -334,6 +334,7 @@ var ConsynGraph = (function(){
       updateOptions: function(opts){
         this.options = extend(this.options, opts);
       },
+      /** Augment the options data with default options for each serie that has no view options set */
       _fixDefaultSeriesOptions: function(){
         if(typeof this.options.series=="undefined"){
           this.options.series = {};
@@ -463,6 +464,9 @@ var ConsynGraph = (function(){
             if(typeof opts.label=="function"){
               labfun = opts.label;
             }
+            
+            var labelattrs = opts.labelattrs;
+            var attrs = extend({}, opts.attrs);
               
             var pdata=datarange[0], px=x1, py=y1, lab="",prevlab="";
             for(var i=0; i<numticks; i++){
@@ -473,7 +477,7 @@ var ConsynGraph = (function(){
               if(lab!==prevlab){
                 set.push ( 
                    view.paper.text(px+(textspace*orient[0]), py+(textspace*orient[1]), lab )
-                   .attr({'font-size':8,'text-anchor':textanchor}) 
+                   .attr(extend({'font-size':8,'text-anchor':textanchor}, labelattrs)) 
                       );
               }
               prevlab=lab;
@@ -484,14 +488,15 @@ var ConsynGraph = (function(){
               
             }
             
-            set.push( view.paper.path("M"+x1+" "+y1+"L"+x2+" "+y2 + tickspath ) );
+            set.push( view.paper.path("M"+x1+" "+y1+"L"+x2+" "+y2 + tickspath ).attr( attrs ) );
             
             if(opts.name){
+              var nameattrs = extend({'font-size': 11, rotation: orient[0]?-90:0}, opts.nameattrs);
               set.push( 
                 view.paper.text(
                  x1 + ~~((x2-x1)/2 + orient[0]*50),
                  y1 + ~~((y2-y1)/2 + orient[1]*25),
-                 opts.name).attr({'font-size': 11, rotation: orient[0]?-90:0})
+                 opts.name).attr(nameattrs)
                  );
             }
             

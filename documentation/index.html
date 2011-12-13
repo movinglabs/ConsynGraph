@@ -54,9 +54,18 @@
          title: "Simple Graph",
          frame: {fill:'#EEF'},
          axes: {
-           west: {from_zero:true, name:"Value"}, 
+           west: {
+             from_zero:true, 
+             name:"Value", 
+             nameattrs: {fill: "#666"},
+             labelattrs: {fill: "#888"},
+             attrs: {stroke: "#666"}
+           }, 
            south: {
              name: "Blaat (x10)",
+             nameattrs: {fill: "#666"},
+             labelattrs: {fill: "#888"},
+             attrs: {stroke: "#666"},
              label: function(v){
                return ~~(v)/10; // label formatting function
              }
