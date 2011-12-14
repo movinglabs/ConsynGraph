@@ -63,9 +63,9 @@ var ConsynGraph = (function(){
       this.colors = colors;
       this.mappedcolor={};
       
-      this.prepare_order = ['color', 'frame','title','background','stack','series','legend','grid','axes'];
+      this.prepare_order = ['color', 'frame','title','background','stack','series','legend','range','grid','axes'];
       
-      this.render_order = ['frame','title','background', 'grid','axes','series','legend', 'dynlabels'];
+      this.render_order = ['frame','title','background','range', 'grid','axes','series','legend', 'dynlabels'];
       
       
       this.viewport = {x:0,y:0, width: 200, height: 200};
@@ -403,18 +403,52 @@ var ConsynGraph = (function(){
             return s;
           }
         }),
+        range: new Renderer({
+          prepare: function(view,opts,context){
+            if(!opts)opts = {x:{},y:{}};
+            var xopts=extend({relative_padding:0.1}, opts.x);
+            var yopts=extend({relative_padding:0.1}, opts.y);
+            
+            if(typeof xopts =="object"){
+              var range = view.viewparameters.x.range;
+              
+              if(xopts.relative_padding){
+                var d = range[1]-range[0];
+                var pad = d * xopts.relative_padding/2;
+                range[0] = range[0] - pad;
+                range[1] = range[1] + pad;
+              }
+              
+              if(xopts.from_zero) range[0] = Math.min(0,range[0]);
+              
+            }
+            if(typeof yopts =="object"){
+              var range = view.viewparameters.y.range;
+              
+              if(yopts.relative_padding){
+                var d = range[1]-range[0];
+                var pad = d * yopts.relative_padding/2;
+                range[0] = range[0] - pad;
+                range[1] = range[1] + pad;
+              }
+              
+              if(yopts.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);  
+              
+            }
+          } 
+        }),
         
         axes: new Renderer({
           prepare: function(view,opts,context){
             opts = extend( deepcopy(this.defaultOptions) , opts);
 
             if(typeof opts.south =="object"){
-              if(opts.south.from_zero) view.viewparameters.x.range[0] = Math.min(0,view.viewparameters.x.range[0]);
+              //if(opts.south.from_zero) view.viewparameters.x.range[0] = Math.min(0,view.viewparameters.x.range[0]);
               var dy = 30;
               view.grapharea.height-=dy;
             }
             if(typeof opts.west =="object"){
-              if(opts.west.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);
+              //if(opts.west.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);
               var dx = 50;
               view.grapharea.x+=dx;
               view.grapharea.width-=dx;

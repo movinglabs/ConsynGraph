@@ -53,9 +53,9 @@
     { // options
          title: "Simple Graph",
          frame: {fill:'#EEF'},
+         range: { y: {from_zero: true } },
          axes: {
            west: {
-             from_zero:true, 
              name:"Value", 
              nameattrs: {fill: "#666"},
              labelattrs: {fill: "#888"},
@@ -205,8 +205,9 @@
     { // options
          title: "Stacked Graph",
          frame: {fill:'#EEF'},
+         range: { y: {from_zero: true } },
          axes: {
-           west: {from_zero:true, name:"Value"}, 
+           west: {name:"Value"}, 
            south: {
              name: "Blaat (x10)",
              label: function(v){
@@ -363,8 +364,9 @@
     { // options
          title: "Simple Graph",
          frame: {fill:'#EEF'},
+         range: { y: {from_zero: true } },
          axes: {
-           west: {from_zero:true, name:"Value"}, 
+           west: { name:"Value"}, 
            south: {
              name: "Time",
              label: ConsynGraph.Func.timestampLabels
@@ -419,8 +421,9 @@
     { // options
          title: "Empty Graph",
          frame: {fill:'#EEF'},
+         range: { y: {from_zero: true } },
          axes: {
-           west: {from_zero:true, name:"Value"}, 
+           west: { name:"Value"}, 
            south: {
              name: "Blaat (x10)",
              label: function(v){
