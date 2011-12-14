@@ -467,6 +467,7 @@ var ConsynGraph = (function(){
             
             var labelattrs = opts.labelattrs;
             var attrs = extend({}, opts.attrs);
+            var tickattrs = extend({}, opts.tickattrs);
               
             var pdata=datarange[0], px=x1, py=y1, lab="",prevlab="";
             for(var i=0; i<numticks; i++){
@@ -488,7 +489,8 @@ var ConsynGraph = (function(){
               
             }
             
-            set.push( view.paper.path("M"+x1+" "+y1+"L"+x2+" "+y2 + tickspath ).attr( attrs ) );
+            set.push( view.paper.path("M"+x1+" "+y1+"L"+x2+" "+y2 ).attr( attrs ) );
+            set.push( view.paper.path(tickspath ).attr( tickattrs ) );
             
             if(opts.name){
               var nameattrs = extend({'font-size': 11, rotation: orient[0]?-90:0}, opts.nameattrs);
