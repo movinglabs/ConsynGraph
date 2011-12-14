@@ -444,12 +444,14 @@ var ConsynGraph = (function(){
 
             if(typeof opts.south =="object"){
               //if(opts.south.from_zero) view.viewparameters.x.range[0] = Math.min(0,view.viewparameters.x.range[0]);
-              var dy = 30;
+              var dy = 15;
+              if(opts.south.name) dy+=15;
               view.grapharea.height-=dy;
             }
             if(typeof opts.west =="object"){
               //if(opts.west.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);
-              var dx = 50;
+              var dx = 35;
+              if(opts.west.name) dx+=15;
               view.grapharea.x+=dx;
               view.grapharea.width-=dx;
             }
@@ -574,8 +576,8 @@ var ConsynGraph = (function(){
             },
             render: function(view,opts,context){
               var keys = [];
-
-              if(typeof opts!="undefined" && typeof opts.select!="undefined"){
+              if(typeof opts=="undefined") opts = {};
+              if(typeof opts.select!="undefined"){
                 keys = opts.select;
               }else{
                
@@ -586,7 +588,7 @@ var ConsynGraph = (function(){
               
               var num_series = keys.length;
               
-              
+              var boxattrs = opts.box;
               
               var set = view.paper.set();
               if(num_series>0){
@@ -596,7 +598,7 @@ var ConsynGraph = (function(){
                 var x = view.viewport.width - w - 5;
                 var y = view.options.gutter[0];
                 var box = view.paper.rect(x, y, w, h)
-                  .attr({fill:'#FFF','stroke-width':1,'stroke':'#DDD'});
+                  .attr(extend({fill:'#FFF','stroke-width':1,'stroke':'#DDD'}, boxattrs));
                   set.push(box);
                   
                 var xt = x+2;
