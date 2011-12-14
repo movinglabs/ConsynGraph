@@ -548,6 +548,76 @@ var ConsynGraph = (function(){
           },
           defaultOptions: {south:false,west:false}
         }),
+        grid: new Renderer({
+          render: function(view,opts,context){
+            opts = extend(deepcopy(this.defaultOptions), opts);
+            
+            var vp = view.grapharea;
+            var s = view.paper.set();
+            
+            var y2 = vp.y + vp.height;  
+            var x2 = vp.x + vp.width;
+              
+            if(opts.x){
+              s.push ( this.renderGrid(vp.x, vp.y, x2, y2,[0,1], view, opts.x, context) );
+            }
+            
+            if(opts.y){
+              s.push ( this.renderGrid(vp.x, vp.y, x2, y2,[-1,0], view, opts.y, context) );
+            }
+            
+            return s;
+          },
+          renderGrid: function(x1,y1, x2,y2,orient, view, opts, context ){
+            var set = view.paper.set();
+            var numticks = 10;
+
+            
+            var dx = (x2-x1) / (numticks-1);
+            var dy = (y2-y1) / (numticks-1);
+            
+            var datarange = view.viewparameters.y.range;
+            if(orient[0]==0)datarange = view.viewparameters.x.range;
+            
+            var p2x = x2-x1;
+            var p2y = y2-y1;
+            
+            if(orient[0]==0){
+              dy =0;
+              p2x=0;
+            }else{
+              dx = 0;
+              p2y = 0;
+            }
+            var ddata = (datarange[1]-datarange[0]) / (numticks-1);
+            
+
+            
+            var tickspath = "M"+x1+" "+y1;
+            
+            var labfun = this.formatLabel;
+            if(typeof opts.label=="function"){
+              labfun = opts.label;
+            }
+            
+            var attrs = extend({}, opts.attrs);
+    
+            var pdata=datarange[0], px=x1, py=y1, lab="",prevlab="";
+            for(var i=0; i<numticks; i++){
+              tickspath+= "M"+(~~px)+" "+(~~py)+"l"+(~~(p2x))+" "+(~~(p2y));
+              
+              px+=dx;
+              py+=dy;
+              pdata+=ddata;
+              
+            }
+            
+            set.push( view.paper.path(tickspath ).attr( attrs ) );
+            
+            return set;
+          },
+          defaultOptions: {x:false,y:false}
+        }),
         background: new Renderer({
             render: function(view,opts,context){
               if(typeof opts != "object") opts = {fill:'#FFF','stroke-width': 0};
