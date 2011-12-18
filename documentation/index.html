@@ -210,10 +210,7 @@
          axes: {
            west: {name:"Value"}, 
            south: {
-             name: "Blaat (x10)",
-             label: function(v){
-               return ~~(v)/10; // label formatting function
-             }
+             name: "Blaat"
            }
          },
          grid: {
@@ -367,15 +364,18 @@
          frame: {fill:'#EEF'},
          range: { y: {from_zero: true } },
          axes: {
-           west: { name:"Value"}, 
+           west: { name:"Value", step_multiple: 10}, 
            south: {
              name: "Time",
-             label: ConsynGraph.Func.timestampLabels
+             label: ConsynGraph.Func.timestampLabels,
+             
+             step_multiple: 2*24*3600  // ticks only allowed at multiples of this number
+             
            }
          },
          grid: {
-           x: false,
-           y: {step: 10, start: 0 }
+           y: {step_multiple: 20, attrs:{stroke: '#EEE'}},
+           x: {step_multiple: 24*3600, attrs:{stroke: '#DDD'} }
          },
          legend: {
           type: 'box', 

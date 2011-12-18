@@ -160,6 +160,81 @@ var ConsynGraph = (function(){
         }
         return s;
       },
+      /* pick the 'prettiest' number between min and max (inclusive)
+         0 is the pretiest one
+      */
+      snapNumber: function(min, max){
+        if(min<=0 && max >= 0) return 0; // shortcut
+        factor = 1;
+        if(min<0 && max<0){  // flip the numbers
+          factor = -1; 
+          min = -min;
+          max = -max;
+        }
+        
+        var scale = 1;
+        var pretty = 1;
+        while(pretty*scale > max){
+          scale /= 10; 
+        }
+        while(pretty*scale <= max){
+          scale *= 10; 
+        }
+        scale /= 10;
+        var step = 1;
+        var c = 32; // safety
+        while(pretty*scale < min && c-->0){
+          if( (pretty+step) * scale > max ) step /= 10;
+          else pretty += step;
+        }
+        
+        return pretty*scale*factor;
+        
+      },
+      snapSteps: function(orient,opts){
+        var numticks = opts.step_count;
+        var datarange = this.viewparameters.y.range;
+        if(orient[0]==0)datarange = this.viewparameters.x.range;
+        
+        var totalspan = datarange[1]-datarange[0];
+        
+        if(opts && opts['step_size']){
+          var ddata = opts['step_size'];
+          if(ddata>totalspan) ddata=totalspan;
+        }else{
+          
+        
+          if(opts && opts['step_multiple']){ 
+            // round estimated stepsize to the nearest allowed multiple
+            var ddata = (totalspan) / (numticks);
+            ddata = Math.max(1, Math.round(ddata / opts['step_multiple'] )) * opts['step_multiple'];
+          }else{
+            var ddata = (totalspan) / (numticks-1);
+            ddata = this.snapNumber(totalspan / numticks, ddata);
+          }
+        }
+        numticks =  1 + (totalspan/ddata);
+
+                    
+        var realticks = numticks;
+        numticks = ~~(numticks);
+
+        // try to shift first tick to a more favorable position
+        var dstart = datarange[0];
+        if(opts && opts['step_multiple']){
+          if( dstart % opts['step_multiple'] != 0 ){
+            dstart = ~~( (dstart + opts['step_multiple'])/opts['step_multiple'])* opts['step_multiple'];  
+          }
+          while(dstart+(numticks-1)*ddata > datarange[1]){
+            // TODO: fix this properly
+            numticks--;
+          }
+        }else{
+          dstart = this.snapNumber( dstart, datarange[0] + (realticks-numticks)*ddata );
+        }
+        
+        return {start: dstart, size:ddata, count:numticks, realcount: realticks};
+      },
       toPathString: function(d, opts,reverse){
         smooth=opts.smooth/2;
 
@@ -406,33 +481,35 @@ var ConsynGraph = (function(){
         range: new Renderer({
           prepare: function(view,opts,context){
             if(!opts)opts = {x:{},y:{}};
-            var xopts=extend({relative_padding:0.1}, opts.x);
-            var yopts=extend({relative_padding:0.1}, opts.y);
+            var xopts=extend({relative_padding:0.2}, opts.x);
+            var yopts=extend({relative_padding:0.2}, opts.y);
             
             if(typeof xopts =="object"){
               var range = view.viewparameters.x.range;
               
+              if(xopts.from_zero) range[0] = Math.min(0,range[0]);
+
               if(xopts.relative_padding){
                 var d = range[1]-range[0];
                 var pad = d * xopts.relative_padding/2;
-                range[0] = range[0] - pad;
+                range[0] = view.snapNumber(range[0] - pad, range[0]);
                 range[1] = range[1] + pad;
               }
               
-              if(xopts.from_zero) range[0] = Math.min(0,range[0]);
               
             }
             if(typeof yopts =="object"){
               var range = view.viewparameters.y.range;
               
+              if(yopts.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);  
+
               if(yopts.relative_padding){
                 var d = range[1]-range[0];
                 var pad = d * yopts.relative_padding/2;
-                range[0] = range[0] - pad;
+                range[0] = view.snapNumber(range[0] - pad, range[0]);
                 range[1] = range[1] + pad;
               }
               
-              if(yopts.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);  
               
             }
           } 
@@ -477,24 +554,34 @@ var ConsynGraph = (function(){
           },
           renderAxis: function(x1,y1, x2,y2,orient, view, opts, context ){
             var set = view.paper.set();
-            var numticks = 10;
+            opts = extend ( {step_count: 6}, opts);
+            var numticks = opts.step_count;
             var ticksize = 3;
             var textspace = 10;
             
-            var dx = (x2-x1) / (numticks-1);
-            var dy = (y2-y1) / (numticks-1);
             
             var datarange = view.viewparameters.y.range;
             if(orient[0]==0)datarange = view.viewparameters.x.range;
             
+            var totalspan = datarange[1]-datarange[0];
             
             var textanchor='middle';
             if(orient[0]==-1)textanchor='end';
             else if(orient[0]==1)textanchor='start';
             
-            var ddata = (datarange[1]-datarange[0]) / (numticks-1);
             
-            var tickspath = "M"+x1+" "+y1;
+            var s = view.snapSteps(orient, opts);
+            numticks = s.count;
+            var realticks = s.realcount;
+            var dstart = s.start;
+            var ddata = s.size;
+
+            var offset = (dstart-datarange[0])/ddata;
+            
+            var dx = (x2-x1) / (realticks-1);
+            var dy = (y2-y1) / (realticks-1);
+
+            var tickspath = "M"+(x1+offset*dx)+" "+(y1+offset*dy);
             
             var labfun = this.formatLabel;
             if(typeof opts.label=="function"){
@@ -504,8 +591,12 @@ var ConsynGraph = (function(){
             var labelattrs = opts.labelattrs;
             var attrs = extend({}, opts.attrs);
             var tickattrs = extend({}, opts.tickattrs);
-              
-            var pdata=datarange[0], px=x1, py=y1, lab="",prevlab="";
+            
+            var pdata=datarange[0]+offset*ddata, 
+                px=x1+offset*dx, 
+                py=y1+offset*dy, 
+                lab="",
+                prevlab="";
             for(var i=0; i<numticks; i++){
               tickspath+= "M"+(~~px)+" "+(~~py)+"l"+(~~(ticksize*orient[0]))+" "+(~~(ticksize*orient[1]));
               lab = pdata;
@@ -563,24 +654,36 @@ var ConsynGraph = (function(){
             }
             
             if(opts.y){
-              s.push ( this.renderGrid(vp.x, vp.y, x2, y2,[-1,0], view, opts.y, context) );
+              s.push ( this.renderGrid(vp.x, y2, x2, vp.y,[-1,0], view, opts.y, context) );
             }
             
             return s;
           },
           renderGrid: function(x1,y1, x2,y2,orient, view, opts, context ){
             var set = view.paper.set();
-            var numticks = 10;
+            opts = extend( {step_count:6}, opts);
+            var numticks = opts.step_count;
 
             
-            var dx = (x2-x1) / (numticks-1);
-            var dy = (y2-y1) / (numticks-1);
             
             var datarange = view.viewparameters.y.range;
             if(orient[0]==0)datarange = view.viewparameters.x.range;
             
+            var s = view.snapSteps(orient, opts);
+            numticks = s.count;
+            var realticks = s.realcount;
+            var dstart = s.start;
+            var ddata = s.size;
+
+            var offset = (dstart-datarange[0])/ddata;
+            
+            var dx = (x2-x1) / (realticks-1);
+            var dy = (y2-y1) / (realticks-1);
+
+            
             var p2x = x2-x1;
             var p2y = y2-y1;
+            
             
             if(orient[0]==0){
               dy =0;
@@ -589,11 +692,10 @@ var ConsynGraph = (function(){
               dx = 0;
               p2y = 0;
             }
-            var ddata = (datarange[1]-datarange[0]) / (numticks-1);
+  
+            numticks = ~~(numticks);
             
-
-            
-            var tickspath = "M"+x1+" "+y1;
+            var tickspath = "M"+(x1+offset*dx)+" "+(y1+offset*dy);
             
             var labfun = this.formatLabel;
             if(typeof opts.label=="function"){
@@ -602,7 +704,11 @@ var ConsynGraph = (function(){
             
             var attrs = extend({}, opts.attrs);
     
-            var pdata=datarange[0], px=x1, py=y1, lab="",prevlab="";
+            var pdata=dstart+offset*ddata, 
+                px=x1+offset*dx, 
+                py=y1+offset*dy, 
+                lab="",
+                prevlab="";
             for(var i=0; i<numticks; i++){
               tickspath+= "M"+(~~px)+" "+(~~py)+"l"+(~~(p2x))+" "+(~~(p2y));
               
