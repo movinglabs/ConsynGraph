@@ -59,14 +59,14 @@
              name:"Value", 
              nameattrs: {fill: "#666"},
              labelattrs: {fill: "#888"},
-             attrs: {stroke: "#CCC"},
+             attrs: {stroke: "#AAA"},
              tickattrs: {stroke: "#666"}
            }, 
            south: {
              name: "Blaat (x10)",
              nameattrs: {fill: "#666"},
              labelattrs: {fill: "#888"},
-             attrs: {stroke: "#CCC"},
+             attrs: {stroke: "#AAA"},
              tickattrs: {stroke: "#666"},
              label: function(v){
                return ~~(v)/10; // label formatting function
@@ -215,7 +215,7 @@
          },
          grid: {
            x: false,
-           y: {step: 10, start: 0 }
+           y: {step: 10, start: 0, bands:{fill:'#CFC'} }
          },
          legend: {
           type: 'box', 
@@ -374,7 +374,7 @@
            }
          },
          grid: {
-           y: {step_multiple: 20, attrs:{stroke: '#EEE'}},
+           y: {step_multiple: 20, attrs:{'stroke-width': 0}, bands:{fill:'#CCC',opacity:0.2}},
            x: {step_multiple: 24*3600, attrs:{stroke: '#DDD'} }
          },
          legend: {
@@ -404,7 +404,7 @@
    
    
    <h2>Exception Test Cases</h2>
-   <strong>Empty Graph</strong>
+   <strong>Zero y-range Graph</strong>
    
    <div style="height: 200px; width: 600px;" id="empty"></div>
    
@@ -460,7 +460,24 @@
      $("#scriptemptycode").html($("#scriptempty").html());
    </script>
   
+   <!-- ------------------------------------------ -->
    
+   <strong>Very Empty Graph</strong>
+   <div style="height: 200px; width: 600px;" id="empty2"></div>
+   
+   
+   <script type="text/javascript" id="scriptempty2">
+   
+   var view = new ConsynGraph.View().draw(document.getElementById('empty2'));
+   
+   </script>
+   
+   <pre><code id="scriptempty2code">
+   ... code sample loaded dynamically using JavaScript ...
+   </code></pre>
+   <script type="text/javascript">
+     $("#scriptempty2code").html($("#scriptempty2").html());
+   </script>
    
    
   </div>

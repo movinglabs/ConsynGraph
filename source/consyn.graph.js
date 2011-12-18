@@ -75,6 +75,10 @@ var ConsynGraph = (function(){
       
     }
     
+    var viewgrid_func = function ConsynGraph_MultiView(views){
+      this.views = views;
+    }
+    
     var Renderer = function(e){
       extend(this, e);
     }
@@ -229,9 +233,9 @@ var ConsynGraph = (function(){
             // TODO: fix this properly
             numticks--;
           }
-        }else{
+        } /* else{
           dstart = this.snapNumber( dstart, datarange[0] + (realticks-numticks)*ddata );
-        }
+        } */
         
         return {start: dstart, size:ddata, count:numticks, realcount: realticks};
       },
@@ -423,6 +427,18 @@ var ConsynGraph = (function(){
     };
     
     
+    viewgrid_func.prototype = {
+      draw: function(el){
+        // set parameters on all views to make sure they fit together nicely
+        // TODO: call all appropriate draw functions
+      }
+    };
+    
+    
+    // // // //
+    //       //
+    // // // //
+    
     extend(_graph, {
       Func: {
         timestampLabels: function(v, i, min, max){
@@ -445,6 +461,7 @@ var ConsynGraph = (function(){
         }
       },
       View: view_func,
+      ViewGrid: viewgrid_func,
       Renderer: Renderer,
       
       renderers:{
@@ -481,8 +498,8 @@ var ConsynGraph = (function(){
         range: new Renderer({
           prepare: function(view,opts,context){
             if(!opts)opts = {x:{},y:{}};
-            var xopts=extend({relative_padding:0.2}, opts.x);
-            var yopts=extend({relative_padding:0.2}, opts.y);
+            var xopts=extend({relative_padding:0.16}, opts.x);
+            var yopts=extend({relative_padding:0.16}, opts.y);
             
             if(typeof xopts =="object"){
               var range = view.viewparameters.x.range;
@@ -661,7 +678,7 @@ var ConsynGraph = (function(){
           },
           renderGrid: function(x1,y1, x2,y2,orient, view, opts, context ){
             var set = view.paper.set();
-            opts = extend( {step_count:6}, opts);
+            opts = extend( {step_count:6, attrs:deepcopy(this.defaultAttrs)}, opts);
             var numticks = opts.step_count;
 
             
@@ -697,18 +714,18 @@ var ConsynGraph = (function(){
             
             var tickspath = "M"+(x1+offset*dx)+" "+(y1+offset*dy);
             
+            var bandspath = "M"+(x1+offset*dx)+" "+(y1+offset*dy);
+            
             var labfun = this.formatLabel;
             if(typeof opts.label=="function"){
               labfun = opts.label;
             }
             
             var attrs = extend({}, opts.attrs);
-    
+            
             var pdata=dstart+offset*ddata, 
                 px=x1+offset*dx, 
-                py=y1+offset*dy, 
-                lab="",
-                prevlab="";
+                py=y1+offset*dy;
             for(var i=0; i<numticks; i++){
               tickspath+= "M"+(~~px)+" "+(~~py)+"l"+(~~(p2x))+" "+(~~(p2y));
               
@@ -718,11 +735,35 @@ var ConsynGraph = (function(){
               
             }
             
+            if(opts.bands){
+              // TODO: make sure banding is rendered for both x and y before the grid itself is rendered, now we need opacity to fix this
+              pdata=dstart+offset*ddata, 
+              px=x1+offset*dx, 
+              py=y1+offset*dy;
+              var bandsattrs = extend({'stroke-width':0, opacity: 0.3}, opts.bands);
+      
+              for(var i=0; i<numticks; i+=2){
+                bandspath+= "M"+(~~px)+" "+(~~py)
+                           +"l"+(~~(p2x))+" "+(~~(p2y))
+                           +"l"+(~~dx)+" "+(~~dy)
+                           +"l"+(-(~~p2x))+" "+(-(~~p2y))
+                           +"l"+(-(~~dx))+" "+(-(~~dy));
+                
+                px+=2*dx;
+                py+=2*dy;
+                pdata+=2*ddata;
+                
+              }
+              set.push( view.paper.path(bandspath ).attr( bandsattrs ) );
+            }
+
             set.push( view.paper.path(tickspath ).attr( attrs ) );
+
             
             return set;
           },
-          defaultOptions: {x:false,y:false}
+          defaultOptions: {x:false,y:false},
+          defaultAttrs: {stroke: '#CCC'}
         }),
         background: new Renderer({
             render: function(view,opts,context){
