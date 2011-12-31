@@ -215,7 +215,7 @@
          },
          grid: {
            x: false,
-           y: {step: 10, start: 0, bands:{fill:'#CFC'} }
+           y: {step: 10, start: 0, attrs:{stroke:'#CFC'}, bands:{fill:'#CFC',opacity:0.5} }
          },
          legend: {
           type: 'box', 
@@ -361,31 +361,32 @@
     }, 
     { // options
          title: "Simple Graph",
-         frame: {fill:'#EEF'},
+         frame: {fill:'#FFF','stroke-width':0},
          range: { y: {from_zero: true } },
          axes: {
-           west: { name:"Value", step_multiple: 10}, 
+           west: { name:"Value",attrs: {stroke:'#BBB'}, step_multiple: 10}, 
            south: {
              name: "Time",
              label: ConsynGraph.Func.timestampLabels,
-             
+             attrs: {stroke:'#BBB'},
              step_multiple: 2*24*3600  // ticks only allowed at multiples of this number
              
            }
          },
          grid: {
-           y: {step_multiple: 20, attrs:{'stroke-width': 0}, bands:{fill:'#CCC',opacity:0.2}},
-           x: {step_multiple: 24*3600, attrs:{stroke: '#DDD'} }
+           y: {step_multiple: 20, attrs:{'stroke-width':0}, bands:{fill:'#CCC',opacity:0.2, even:true}},
+           x: {step_multiple: 24*3600, attrs:{stroke: '#AAA','stroke-dasharray':". "} }
          },
          legend: {
           type: 'box', 
+          box:{'stroke-width':0},
           position: {top: 10, right: 10}
          },
          series: {
            serie1: {
              label: "Serie 1 Line", 
              markers: "o",
-             line: true
+             line: {'stroke-dasharray':".",'stroke-width':2}
            }
          
          }
@@ -400,6 +401,130 @@
    <script type="text/javascript">
      $("#scripttscode").html($("#scriptts").html());
    </script>
+   
+   
+   
+   
+   <h2>Examples</h2>
+   
+   
+   <div style="height: 200px; width: 600px;" id="example1"></div>
+   
+   
+   <script type="text/javascript" id="examplescript1">
+   
+   var reverse_mapping = {200:1, 301:2, 404:3, 501:4};
+   var label_mapping = {};
+   for(var i in reverse_mapping){
+     var v = reverse_mapping[ i ];
+     label_mapping[ v ] = i; 
+   }
+   
+   function fixdata(data){
+     
+     var num=0;
+     for(var i in data){
+       if(typeof data[i] == "object") num++;
+     }
+     
+     var spacing = 1/(num+1);
+     var offset = -0.5+spacing;
+     
+     for(var i in data){
+       if(typeof data[i] == "object"){
+         for(var ix = 0; ix < data[i].y.length; ix++){
+           var v = data[i].y[ix];
+           data[i].y[ix] = reverse_mapping[ v ] + offset; 
+         }
+         offset += spacing;
+       }
+     }
+     console.log(data);
+     return data;
+   }
+   
+   var view = new ConsynGraph.View(
+     { // data series
+     serie1:
+       { 
+         x: [5, 20 , 30, 50, 70],
+         y: [200, 301, 200, 200, 404],
+     },
+     serie2:
+     { 
+       x: [5, 20 , 30, 50, 70],
+       y: [200, 301, 501, 200, 501],
+     },
+     serie3:
+     { 
+       x: [5, 20 , 30, 50, 70],
+       y: [200, 404, 501, 200, 200],
+     },
+     serie4:
+     { 
+       x: [5, 20 , 30, 50, 70],
+       y: [200, 200, 501, 200, 200]
+     }
+    }, 
+    { // options
+         title: "Discrete Values Graph",
+         data_transform: fixdata,
+         frame: {fill:'#E6E6FF'},
+         range: { y: { start: 0.5, padding: 0.5 } },
+         axes: {
+           west: {
+             name:"Value", 
+             nameattrs: {fill: "#666"},
+             labelattrs: {fill: "#888"},
+             attrs: {stroke: "#AAA"},
+             tickattrs: {'stroke-width':0},
+             label: function(v){
+               return label_mapping[v] || "";
+             },
+             step_size: 0.5, 
+             
+           }, 
+           south: {
+             name: "Blaat (x10)",
+             nameattrs: {fill: "#666"},
+             labelattrs: {fill: "#888"},
+             attrs: {stroke: "#AAA"},
+             tickattrs: {stroke: "#666"},
+             
+           }
+         }, 
+         dynlabels:{
+           label: function(v){
+             return label_mapping[Math.round(v)] || "";
+           }
+         },
+         grid: {
+           y: {step_size: 1, start: 0.5, attrs:{'stroke-width':1}, bands:{fill:'#E0E0E0',opacity:0.5} }
+         },
+         legend: {
+          type: 'box', 
+          box: {'stroke-width':0, fill:'#EFEFFF'},
+          position: {top: 10, right: 10}
+         },
+         series: {
+           default: {
+             markers: {symbol: "o", size: 3,attr:{fill:true}},
+             line: {'stroke-width':6, step:true, opacity: 0.4}
+           }
+         
+         }
+       }
+     ).draw(document.getElementById('example1'));
+   
+   </script>
+   
+   <pre><code id="examplescript1code">
+   ... code sample loaded dynamically using JavaScript ...
+   </code></pre>
+   <script type="text/javascript">
+     $("#examplescript1code").html($("#examplescript1").html());
+   </script>
+   
    
    
    

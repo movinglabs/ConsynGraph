@@ -63,7 +63,7 @@ var ConsynGraph = (function(){
       this.colors = colors;
       this.mappedcolor={};
       
-      this.prepare_order = ['color', 'frame','title','background','stack','series','legend','range','grid','axes'];
+      this.prepare_order = ['data_transform','color', 'frame','title','background','stack','series','legend','range','grid','axes'];
       
       this.render_order = ['frame','title','background','range', 'grid','axes','series','legend', 'dynlabels'];
       
@@ -199,21 +199,22 @@ var ConsynGraph = (function(){
         var numticks = opts.step_count;
         var datarange = this.viewparameters.y.range;
         if(orient[0]==0)datarange = this.viewparameters.x.range;
-        
-        var totalspan = datarange[1]-datarange[0];
-        
+        var dstart = datarange[0];
+        if(opts && typeof opts['start'] != "undefined"){
+          dstart = opts['start'];
+        }
+        var totalspan = datarange[1]-dstart;
+        var ddata = 1;
         if(opts && opts['step_size']){
-          var ddata = opts['step_size'];
+          ddata = opts['step_size'];
           if(ddata>totalspan) ddata=totalspan;
         }else{
-          
-        
           if(opts && opts['step_multiple']){ 
             // round estimated stepsize to the nearest allowed multiple
-            var ddata = (totalspan) / (numticks);
+            ddata = (totalspan) / (numticks);
             ddata = Math.max(1, Math.round(ddata / opts['step_multiple'] )) * opts['step_multiple'];
           }else{
-            var ddata = (totalspan) / (numticks-1);
+            ddata = (totalspan) / (numticks-1);
             ddata = this.snapNumber(totalspan / numticks, ddata);
           }
         }
@@ -224,7 +225,7 @@ var ConsynGraph = (function(){
         numticks = ~~(numticks);
 
         // try to shift first tick to a more favorable position
-        var dstart = datarange[0];
+        
         if(opts && opts['step_multiple']){
           if( dstart % opts['step_multiple'] != 0 ){
             dstart = ~~( (dstart + opts['step_multiple'])/opts['step_multiple'])* opts['step_multiple'];  
@@ -420,7 +421,11 @@ var ConsynGraph = (function(){
         }
         for(var i in this.series){
           if(typeof this.options.series[i] == "undefined"){
-            this.options.series[i] = deepcopy(default_series_opts);
+            if(typeof this.options.series['default'] !="undefined"){
+              this.options.series[i] = deepcopy(this.options.series['default']);
+            }else{
+              this.options.series[i] = deepcopy(default_series_opts);
+            }
           }
         } 
       }
@@ -465,7 +470,13 @@ var ConsynGraph = (function(){
       Renderer: Renderer,
       
       renderers:{
-        
+        data_transform: new Renderer({
+          prepare: function(view, opts, context){
+            if(typeof opts == "function"){
+              view.series = opts(view.series); 
+            }
+          }
+        }),
         color: new Renderer({
             prepare:function(view,opts, context){
               if(typeof opts!="undefined"&& opts.mapping){
@@ -505,13 +516,18 @@ var ConsynGraph = (function(){
               var range = view.viewparameters.x.range;
               
               if(xopts.from_zero) range[0] = Math.min(0,range[0]);
+              
 
-              if(xopts.relative_padding){
+              if(xopts.padding){
+                range[0] = range[0] - xopts.padding;
+                range[1] = range[1] + xopts.padding;
+              }else if(xopts.relative_padding){
                 var d = range[1]-range[0];
                 var pad = d * xopts.relative_padding/2;
                 range[0] = view.snapNumber(range[0] - pad, range[0]);
                 range[1] = range[1] + pad;
               }
+              if(typeof xopts.start != "undefined") range[0] = xopts.start;
               
               
             }
@@ -520,13 +536,16 @@ var ConsynGraph = (function(){
               
               if(yopts.from_zero) view.viewparameters.y.range[0] = Math.min(0,view.viewparameters.y.range[0]);  
 
-              if(yopts.relative_padding){
+              if(yopts.padding){
+                range[0] = range[0] - yopts.padding;
+                range[1] = range[1] + yopts.padding;
+              }else if(yopts.relative_padding){
                 var d = range[1]-range[0];
                 var pad = d * yopts.relative_padding/2;
                 range[0] = view.snapNumber(range[0] - pad, range[0]);
                 range[1] = range[1] + pad;
               }
-              
+              if(typeof yopts.start != "undefined") range[0] = yopts.start;
               
             }
           } 
@@ -737,12 +756,28 @@ var ConsynGraph = (function(){
             
             if(opts.bands){
               // TODO: make sure banding is rendered for both x and y before the grid itself is rendered, now we need opacity to fix this
+              var bandsattrs = extend({'stroke-width':0, opacity: 0.3}, opts.bands);
+      
+              if(opts.bands.even){ // Put bands on even vs uneven intervals
+                offset+=1;
+              }
               pdata=dstart+offset*ddata, 
               px=x1+offset*dx, 
               py=y1+offset*dy;
-              var bandsattrs = extend({'stroke-width':0, opacity: 0.3}, opts.bands);
-      
-              for(var i=0; i<numticks; i+=2){
+              
+              for(var i=opts.bands.even?1:0; i<numticks; i+=2){
+                
+                if(x2 > x1){
+                  if(px+dx > x2) dx = x2-px;
+                }else{
+                  if(px+dx < x2) dx = x2-px;
+                }
+                if(y2 > y1){
+                  if(py+dy > y2) dy = y2-py;
+                }else{
+                  if(py+dy < y2) dy = y2-py;
+                }
+                
                 bandspath+= "M"+(~~px)+" "+(~~py)
                            +"l"+(~~(p2x))+" "+(~~(p2y))
                            +"l"+(~~dx)+" "+(~~dy)
@@ -913,7 +948,11 @@ var ConsynGraph = (function(){
                 var cp = cps[ix];
                 var i = cp[2];
                 var ylab = cp[3];
-                ylab = view.formatNumber(ylab,5);
+                if(opts && typeof opts.label == "function"){
+                  ylab = opts.label(ylab);
+                }else{
+                  ylab = view.formatNumber(ylab,5);
+                }
                 var labcoord = view.toPixelCoord(cp);
                 
                 var x =labcoord[0];
@@ -1083,9 +1122,11 @@ var ConsynGraph = (function(){
               var c = 0;
               for(var i in view.series){
                 var sopt = {};
+
                 if(typeof view.options.series != "undefined"
                   && typeof view.options.series[i] != "undefined"){
                   sopt =  view.options.series[i];
+                  
                 }
 
                 for(var j in sopt){
@@ -1188,18 +1229,18 @@ var ConsynGraph = (function(){
             },
             render: function(view,opts,context){
               
-
+              opts = extend({'stroke-width':2}, opts);
               
               
               var d = context.data;
               var path = view.toPathString(d, opts);
                 
-              return view.paper.path(path).attr({stroke:opts.stroke});
+              return view.paper.path(path).attr(opts);
               
             },
             renderLegend: function(x,y,w,h, view, opts, context){
-              var col = opts.stroke;
-              return view.paper.path("M"+x+" "+y+"l"+w+" 0").attr({stroke:col,'stroke-width':2});
+              opts = extend({'stroke-width':2}, opts);
+              return view.paper.path("M"+x+" "+y+"l"+w+" 0").attr(opts);
               
             },
             
