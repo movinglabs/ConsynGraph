@@ -587,6 +587,41 @@
   
    <!-- ------------------------------------------ -->
    
+   <strong>Empty stack graph</strong>
+   <div id="eventcount_90_chart_daily" style="height: 200px; clear: both;"></div>
+
+          <script type="text/javascript">
+          $(function(){
+              var v = new ConsynGraph.View(
+                {"count2_90":{"x":[],"y":[]},"count3_90":{"x":[],"y":[]},"count4_90":{"x":[],"y":[]}}                ,{
+                  gutter: [10,10,10,10],
+                  axes: {
+                    south: {
+                      name: 'Time',
+                      label: ConsynGraph.Func.timestampLabels
+                    }, 
+                    west: {name: "Event count", from_zero:true }
+                  },
+                  legend: true,
+                  color: {mapping:{
+                    'count4_90':'#CC0000',
+                    'count3_90':'#FF9900',
+                    'count2_90':'#CCCC00'
+                  }},
+                  //stack: ['count4_90','count3_90','count2_90'],
+                  series: {"count2_90":{"label":"Interesting","markers":{"symbol":"o","size":3,"attr":{"fill":true}},"line":{"smooth":0},"area":{"smooth":0,"opacity":0.5}},"count3_90":{"label":"Warnings","markers":{"symbol":"o","size":3,"attr":{"fill":true}},"line":{"smooth":0},"area":{"smooth":0,"opacity":0.5}},"count4_90":{"label":"Errors","markers":{"symbol":"o","size":3,"attr":{"fill":true}},"line":{"smooth":0},"area":{"smooth":0,"opacity":0.5}}}                  
+                }
+                );
+              v.draw(document.getElementById("eventcount_90_chart_daily"));
+             
+              });
+          </script>
+   
+   
+   
+   
+   <!-- ------------------------------------------ -->
+   
    <strong>Very Empty Graph</strong>
    <div style="height: 200px; width: 600px;" id="empty2"></div>
    

@@ -168,6 +168,7 @@ var ConsynGraph = (function(){
          0 is the pretiest one
       */
       snapNumber: function(min, max){
+        if(min>=max) return min;
         if(min<=0 && max >= 0) return 0; // shortcut
         factor = 1;
         if(min<0 && max<0){  // flip the numbers
@@ -175,7 +176,6 @@ var ConsynGraph = (function(){
           min = -min;
           max = -max;
         }
-        
         var scale = 1;
         var pretty = 1;
         while(pretty*scale > max){
@@ -1109,6 +1109,15 @@ var ConsynGraph = (function(){
                 
               }
               
+              if(_min_x == Number.MAX_VALUE){
+                _min_x=0;
+                _max_x=0;
+              }
+              if(_min_y == Number.MAX_VALUE){
+                _min_y=0;
+                _max_y=0;
+              }
+              
               if(_max_x-_min_x<0.001){
                 _min_x-=0.0001;
                 _max_x+=0.0001; 
@@ -1117,6 +1126,8 @@ var ConsynGraph = (function(){
               if(_max_y-_min_y<0.001){
                 _max_y+=0.0001; 
               }
+              
+              
               
               view.viewparameters = {x:{range: [_min_x, _max_x] }, y: {range: [_min_y, _max_y]} };
               var c = 0;
