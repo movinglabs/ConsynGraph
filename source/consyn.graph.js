@@ -186,13 +186,14 @@ var ConsynGraph = (function(){
         }
         scale /= 10;
         var step = 1;
-        var c = 32; // safety
+        var c = 64; // safety
         while(pretty*scale < min && c-->0){
           if( (pretty+step) * scale > max ) step /= 10;
           else pretty += step;
         }
+        var res = pretty*scale*factor;
         
-        return pretty*scale*factor;
+        return res;
         
       },
       snapSteps: function(orient,opts){
