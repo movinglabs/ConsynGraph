@@ -1209,14 +1209,14 @@ var ConsynGraph = (function(){
             },
             fixOpts: function(opts){
               if((typeof opts == "undefined") || opts===true){
-                opts =  deepcopy(this.default);
+                opts =  deepcopy(this['default']);
               }
               if(""+opts === opts){
-                opts = extend(deepcopy(this.default), {symbol:opts});
+                opts = extend(deepcopy(this['default']), {symbol:opts});
               }
               return opts;
             },
-            default:{symbol: "o", size: 5},
+            'default':{symbol: "o", size: 5},
             symbols:{
               "o": function(paper,x,y,s){
                 return paper.circle(x,y,s);
@@ -1233,7 +1233,7 @@ var ConsynGraph = (function(){
             prepare: function(view,opts, context){
               if(opts===true){
                 opts = deepcopy(this.default);
-              }else opts = extend(deepcopy(this.default), opts);
+              }else opts = extend(deepcopy(this['default']), opts);
               
               if(!opts.smooth)opts.smooth=0;
               if(typeof opts.stroke=="undefined" && context.color){
