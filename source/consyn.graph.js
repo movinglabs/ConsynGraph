@@ -698,7 +698,7 @@ var ConsynGraph = (function(){
           },
           renderGrid: function(x1,y1, x2,y2,orient, view, opts, context ){
             var set = view.paper.set();
-            opts = extend( {step_count:6, attrs:deepcopy(this['default']Attrs)}, opts);
+            opts = extend( {step_count:6, attrs:deepcopy(this.defaultAttrs)}, opts);
             var numticks = opts.step_count;
 
             
