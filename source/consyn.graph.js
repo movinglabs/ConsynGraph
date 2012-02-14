@@ -50,7 +50,7 @@ var ConsynGraph = (function(){
     
     var default_series_opts = {
       line: false,
-      markers: true,
+      markers: true
       };
     
     var view_func = function ConsynGraph_View(series, opts){
