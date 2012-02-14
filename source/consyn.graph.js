@@ -554,7 +554,7 @@ var ConsynGraph = (function(){
         
         axes: new Renderer({
           prepare: function(view,opts,context){
-            opts = extend( deepcopy(this['default']Options) , opts);
+            opts = extend( deepcopy(this.defaultOptions) , opts);
 
             if(typeof opts.south =="object"){
               //if(opts.south.from_zero) view.viewparameters.x.range[0] = Math.min(0,view.viewparameters.x.range[0]);
@@ -571,7 +571,7 @@ var ConsynGraph = (function(){
             }
           },
           render: function(view,opts,context){
-            opts = extend(deepcopy(this['default']Options), opts);
+            opts = extend(deepcopy(this.defaultOptions), opts);
             
             var vp = view.grapharea;
             var s = view.paper.set();
@@ -678,7 +678,7 @@ var ConsynGraph = (function(){
         }),
         grid: new Renderer({
           render: function(view,opts,context){
-            opts = extend(deepcopy(this['default']Options), opts);
+            opts = extend(deepcopy(this.defaultOptions), opts);
             
             var vp = view.grapharea;
             var s = view.paper.set();
