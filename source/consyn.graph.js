@@ -1209,7 +1209,7 @@ var ConsynGraph = (function(){
             },
             fixOpts: function(opts){
               if(typeof opts == "undefined" || opts===true){
-                opts =  deepcopy(this.default)
+                opts =  deepcopy(this.default);
               }
               if(""+opts === opts) opts = extend(deepcopy(this.default),{symbol:opts});
               return opts;
