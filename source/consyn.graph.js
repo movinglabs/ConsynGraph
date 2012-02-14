@@ -1312,7 +1312,7 @@ var ConsynGraph = (function(){
             
         label: new SeriesRenderer({
             
-        }),
+        })
         
         
         
