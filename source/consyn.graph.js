@@ -1208,10 +1208,12 @@ var ConsynGraph = (function(){
               return m;
             },
             fixOpts: function(opts){
-              if(typeof opts == "undefined" || opts===true){
+              if((typeof opts == "undefined") || opts===true){
                 opts =  deepcopy(this.default);
               }
-              if(""+opts === opts) opts = extend(deepcopy(this.default),{symbol:opts});
+              if(""+opts === opts){
+                opts = extend(deepcopy(this.default), {symbol:opts});
+              }
               return opts;
             },
             default:{symbol: "o", size: 5},
