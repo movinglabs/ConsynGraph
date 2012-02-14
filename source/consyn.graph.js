@@ -554,7 +554,7 @@ var ConsynGraph = (function(){
         
         axes: new Renderer({
           prepare: function(view,opts,context){
-            opts = extend( deepcopy(this.defaultOptions) , opts);
+            opts = extend( deepcopy(this['default']Options) , opts);
 
             if(typeof opts.south =="object"){
               //if(opts.south.from_zero) view.viewparameters.x.range[0] = Math.min(0,view.viewparameters.x.range[0]);
@@ -571,7 +571,7 @@ var ConsynGraph = (function(){
             }
           },
           render: function(view,opts,context){
-            opts = extend(deepcopy(this.defaultOptions), opts);
+            opts = extend(deepcopy(this['default']Options), opts);
             
             var vp = view.grapharea;
             var s = view.paper.set();
@@ -678,7 +678,7 @@ var ConsynGraph = (function(){
         }),
         grid: new Renderer({
           render: function(view,opts,context){
-            opts = extend(deepcopy(this.defaultOptions), opts);
+            opts = extend(deepcopy(this['default']Options), opts);
             
             var vp = view.grapharea;
             var s = view.paper.set();
@@ -698,7 +698,7 @@ var ConsynGraph = (function(){
           },
           renderGrid: function(x1,y1, x2,y2,orient, view, opts, context ){
             var set = view.paper.set();
-            opts = extend( {step_count:6, attrs:deepcopy(this.defaultAttrs)}, opts);
+            opts = extend( {step_count:6, attrs:deepcopy(this['default']Attrs)}, opts);
             var numticks = opts.step_count;
 
             
@@ -1232,7 +1232,7 @@ var ConsynGraph = (function(){
             
             prepare: function(view,opts, context){
               if(opts===true){
-                opts = deepcopy(this.default);
+                opts = deepcopy(this['default']);
               }else opts = extend(deepcopy(this['default']), opts);
               
               if(!opts.smooth)opts.smooth=0;
@@ -1258,15 +1258,15 @@ var ConsynGraph = (function(){
               
             },
             
-            default:{
+            'default':{
               smooth: 0.5
             }
         }),
         area: new SeriesRenderer({
             prepare: function(view,opts, context){
               if(opts===true){
-                opts = deepcopy(this.default);
-              }else opts = extend(deepcopy(this.default), opts);
+                opts = deepcopy(this['default']);
+              }else opts = extend(deepcopy(this['default']), opts);
               
               if(!opts.smooth)opts.smooth=0;
               if(typeof opts.fill=="undefined" && context.color){
@@ -1307,7 +1307,7 @@ var ConsynGraph = (function(){
               
             },
             
-            default:{
+            'default':{
               smooth: 0.5, opacity: 1.0
             }
         }),
