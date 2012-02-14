@@ -1223,9 +1223,7 @@ var ConsynGraph = (function(){
               },
               "circle": function(paper,x,y,s){
                 return paper.circle(x,y,s);
-              },
-              
-              
+              }
             }
         }),
         line: new SeriesRenderer({
