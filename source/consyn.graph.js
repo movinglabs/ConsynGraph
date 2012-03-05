@@ -657,7 +657,7 @@ var ConsynGraph = (function(){
             set.push( view.paper.path(tickspath ).attr( tickattrs ) );
             
             if(opts.name){
-              var nameattrs = extend({'font-size': 11, rotation: orient[0]?-90:0}, opts.nameattrs);
+              var nameattrs = extend({'font-size': 11, transform: 'r'+(orient[0]?-90:0)}, opts.nameattrs);
               set.push( 
                 view.paper.text(
                  x1 + ~~((x2-x1)/2 + orient[0]*50),
