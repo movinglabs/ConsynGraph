@@ -464,6 +464,24 @@ var ConsynGraph = (function(){
           }else{
             return d.toDateString();
           }
+        },
+        UTCtimestampLabels: function(v, i, min, max){
+          // TODO: how to make sure all ticks are distinct?
+          // TODO: prevent showing redundant info
+          var d = new Date(v*1000);
+          var len = max-min;
+          var date = d.getUTCDate();
+          var m = d.getUTCMinutes();
+          if(m<10)m = "0"+m;
+          if(len < 48*3600){
+            return d.getUTCHours()+":"+m;            
+          }else if(len < 15*24*3600){
+            return date+(date==1?'st':(date==2?'nd':(date==3?'rd':'th')))+" "+d.getUTCHours()+":"+m;
+          }else if(len < 60*24*3600){
+            return d.getUTCDate();
+          }else{
+            return d.toUTCString();
+          }
         }
       },
       View: view_func,
