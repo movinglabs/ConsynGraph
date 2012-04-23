@@ -1313,13 +1313,13 @@ var ConsynGraph = (function(){
                 var p2 = view.toPixelCoord([d.x[d.x.length-1], 0]);
                 path += "L"+p2[0]+" "+y0+"L"+p1[0]+" "+y0;
               }
-              return view.paper.path(path).attr({fill:opts.fill,opacity:opts.opacity, 'stroke-width':0});
+              return view.paper.path(path).attr({fill:opts.fill,opacity:opts.opacity, 'stroke-width':0, 'stroke':'transparent'});
               
             },
             renderLegend: function(x,y,w,h, view, opts, context){
               var col = opts.fill;
               var path = "M"+x+" "+y+"l"+w+" 0l0 "+~~(h/2)+"l"+(-w)+" 0";
-              return view.paper.path(path).attr({fill:col,opacity:opts.opacity,'stroke-width':0});
+              return view.paper.path(path).attr({fill:col,opacity:opts.opacity,'stroke-width':0, 'stroke':'transparent'});
               
             },
             

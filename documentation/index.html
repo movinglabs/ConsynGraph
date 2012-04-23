@@ -361,7 +361,7 @@
     }, 
     { // options
          title: "Simple Graph",
-         frame: {fill:'#FFF','stroke-width':0},
+         frame: {fill:'#FFF','stroke-width':0, 'stroke':'transparent'},
          range: { y: {from_zero: true } },
          axes: {
            west: { name:"Value",attrs: {stroke:'#BBB'}, step_multiple: 10}, 
@@ -374,7 +374,7 @@
            }
          },
          grid: {
-           y: {step_multiple: 20, attrs:{'stroke-width':0}, bands:{fill:'#CCC',opacity:0.2, even:true}},
+           y: {step_multiple: 20, attrs:{'stroke-width':0.0,'stroke': 'transparent'}, bands:{fill:'#CCC',opacity:0.2, even:true,'stroke-width': 0,'stroke':'transparent'}},
            x: {step_multiple: 24*3600, attrs:{stroke: '#AAA','stroke-dasharray':". "} }
          },
          legend: {
